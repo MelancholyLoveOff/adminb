@@ -583,6 +583,7 @@
             } catch (error) { alert("Erro ao atualizar nome: " + error.message); }
         }
 
+        // --- NOVA FUNÇÃO COM DELETE EM CASCATA ---
         async function deletePlayer(id, name) {
             const confirmDelete = confirm(`Tem a certeza que deseja eliminar o jogador "${name}" e TODO o seu catálogo (artistas, álbuns, singles e músicas)? Esta ação não pode ser desfeita.`);
             if (!confirmDelete) return;
@@ -638,6 +639,7 @@
                 console.error(error);
             }
         }
+        // ------------------------------------------
 
         // ==========================================
         // 3. LÓGICA DO GERADOR DE POSTERS
