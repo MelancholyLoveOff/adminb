@@ -584,16 +584,59 @@
         }
 
         async function deletePlayer(id, name) {
-            const confirmDelete = confirm(`Tem a certeza que deseja eliminar o jogador "${name}"? Esta ação não pode ser desfeita.`);
+            const confirmDelete = confirm(`Tem a certeza que deseja eliminar o jogador "${name}" e TODO o seu catálogo (artistas, álbuns, singles e músicas)? Esta ação não pode ser desfeita.`);
             if (!confirmDelete) return;
 
             try {
+                // 1. Ir buscar os dados do jogador para saber quais são os seus artistas
+                const { data: player, error: fetchError } = await supabaseClient
+                    .from('players')
+                    .select('artist_ids')
+                    .eq('id', id)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
+                const artistIds = parsePgArray(player.artist_ids);
+
+                if (artistIds.length > 0) {
+                    // 2. Eliminar Álbuns e Singles vinculados a esses artistas
+                    await supabaseClient.from('albums').delete().in('artist_id', artistIds);
+                    await supabaseClient.from('singles').delete().in('artist_id', artistIds);
+
+                    // 3. Eliminar Músicas (Songs)
+                    // Como as músicas têm um array de artist_ids, procuramos todas e filtramos os IDs
+                    const { data: allSongs } = await supabaseClient.from('songs').select('id, artist_ids');
+                    if (allSongs) {
+                        const songsToDelete = allSongs
+                            .filter(song => {
+                                const songArtists = parsePgArray(song.artist_ids);
+                                // Verifica se a música tem algum dos artistas que vamos apagar
+                                return songArtists.some(aid => artistIds.includes(aid));
+                            })
+                            .map(song => song.id);
+
+                        if (songsToDelete.length > 0) {
+                            await supabaseClient.from('songs').delete().in('id', songsToDelete);
+                        }
+                    }
+
+                    // 4. Eliminar os próprios Artistas
+                    await supabaseClient.from('artists').delete().in('id', artistIds);
+                }
+
+                // 5. Finalmente, eliminar o Jogador
                 const { error } = await supabaseClient.from('players').delete().eq('id', id);
                 if (error) throw error;
-                showToast("Jogador eliminado com sucesso!");
+
+                showToast("Jogador e todo o catálogo eliminados com sucesso!");
                 loadPlayersData();
                 loadDashboardData();
-            } catch (error) { alert("Erro ao eliminar jogador: " + error.message); }
+                
+            } catch (error) { 
+                alert("Erro ao eliminar jogador e o seu catálogo: " + error.message); 
+                console.error(error);
+            }
         }
 
         // ==========================================
