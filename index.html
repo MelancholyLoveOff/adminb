@@ -21,6 +21,7 @@
             --text-base: #FFFFFF;
             --text-subdued: #a7a7a7;
             --border-color: #333333;
+            --trend-down-red: #e22134;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
@@ -167,14 +168,14 @@
             }
             .admin-sidebar.open { left: 0; }
             .close-sidebar-btn { display: block; }
-            .admin-sidebar h2 { margin-top: 8px; } /* Ajuste para dar espaço ao botão fechar */
+            .admin-sidebar h2 { margin-top: 8px; }
 
             .admin-main { padding: 24px 16px; height: auto; overflow-y: visible; }
             .admin-header h1 { font-size: 24px; }
             
             .poster-scale-wrapper {
-                transform: scale(0.26); /* Adapta aos ecrãs finos dos telemóveis */
-                margin-bottom: -999px; /* 1350 - (1350 * 0.26) = 999 */
+                transform: scale(0.26);
+                margin-bottom: -999px;
             }
             .poster-preview-container { min-height: 400px; padding: 10px; }
         }
@@ -319,6 +320,17 @@
                     <i class="fas fa-calendar-check"></i> Encerrar Dia (Somar e Repor a Zero)
                 </button>
             </div>
+
+            <div class="control-panel" style="max-width: 600px; margin-top: 24px; border: 1px solid var(--trend-down-red); background: rgba(226, 33, 52, 0.05);">
+                <h3 style="margin-bottom: 12px; color: var(--trend-down-red); font-size: 16px;"><i class="fas fa-calendar-times"></i> Reset Semanal (Limpar RPG)</h3>
+                <p style="font-size: 13px; color: var(--text-subdued); margin-bottom: 16px; line-height: 1.5;">
+                    Utilize este botão no início de uma nova semana do RPG. Esta ação irá <strong>zerar as contagens de limite de ações de todos os artistas</strong> (ex: Limites de Divulgação em TV, Rádios, MVs, etc.) e removerá os status de bónus para que possam ser ganhos novamente.
+                </p>
+                <button class="btn-primary" id="btnResetWeek" style="background-color: transparent; border: 2px solid var(--trend-down-red); color: var(--trend-down-red);">
+                    <i class="fas fa-power-off"></i> Fazer Reset da Semana
+                </button>
+            </div>
+
         </section>
 
         <section id="posterSection" style="display: none;">
@@ -583,13 +595,11 @@
             } catch (error) { alert("Erro ao atualizar nome: " + error.message); }
         }
 
-        // --- NOVA FUNÇÃO COM DELETE EM CASCATA ---
         async function deletePlayer(id, name) {
             const confirmDelete = confirm(`Tem a certeza que deseja eliminar o jogador "${name}" e TODO o seu catálogo (artistas, álbuns, singles e músicas)? Esta ação não pode ser desfeita.`);
             if (!confirmDelete) return;
 
             try {
-                // 1. Ir buscar os dados do jogador para saber quais são os seus artistas
                 const { data: player, error: fetchError } = await supabaseClient
                     .from('players')
                     .select('artist_ids')
@@ -601,18 +611,14 @@
                 const artistIds = parsePgArray(player.artist_ids);
 
                 if (artistIds.length > 0) {
-                    // 2. Eliminar Álbuns e Singles vinculados a esses artistas
                     await supabaseClient.from('albums').delete().in('artist_id', artistIds);
                     await supabaseClient.from('singles').delete().in('artist_id', artistIds);
 
-                    // 3. Eliminar Músicas (Songs)
-                    // Como as músicas têm um array de artist_ids, procuramos todas e filtramos os IDs
                     const { data: allSongs } = await supabaseClient.from('songs').select('id, artist_ids');
                     if (allSongs) {
                         const songsToDelete = allSongs
                             .filter(song => {
                                 const songArtists = parsePgArray(song.artist_ids);
-                                // Verifica se a música tem algum dos artistas que vamos apagar
                                 return songArtists.some(aid => artistIds.includes(aid));
                             })
                             .map(song => song.id);
@@ -622,11 +628,9 @@
                         }
                     }
 
-                    // 4. Eliminar os próprios Artistas
                     await supabaseClient.from('artists').delete().in('id', artistIds);
                 }
 
-                // 5. Finalmente, eliminar o Jogador
                 const { error } = await supabaseClient.from('players').delete().eq('id', id);
                 if (error) throw error;
 
@@ -639,7 +643,6 @@
                 console.error(error);
             }
         }
-        // ------------------------------------------
 
         // ==========================================
         // 3. LÓGICA DO GERADOR DE POSTERS
@@ -677,9 +680,8 @@
             const btn = document.getElementById('btnDownload');
             
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando Poster...';
-            wrapper.style.transform = 'scale(1)'; // Remover escala para captura
+            wrapper.style.transform = 'scale(1)';
             
-            // Retirar borda radius momentaneamente para evitar cortes feios no print
             captureArea.style.borderRadius = '0';
 
             html2canvas(captureArea, { scale: 1, useCORS: true, backgroundColor: '#121212' }).then(canvas => {
@@ -688,10 +690,8 @@
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
-                // Restaurar CSS
                 captureArea.style.borderRadius = '8px';
                 
-                // Regressar ao tamanho mobile, se o ecrã for pequeno
                 const scaleValue = window.innerWidth <= 768 ? 'scale(0.26)' : 'scale(0.38)';
                 wrapper.style.transform = scaleValue; 
 
@@ -706,9 +706,9 @@
             });
         });
 
-        // ------------------------------------------------------------------
+        // ==================================================================
         // LÓGICA DE PREENCHIMENTO AUTOMÁTICO PARA POSTER
-        // ------------------------------------------------------------------
+        // ==================================================================
         let posterReleasesData = [];
 
         document.getElementById('posterArtistSelect').addEventListener('change', async (e) => {
@@ -958,6 +958,60 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-calendar-check"></i> Encerrar Dia (Somar e Repor a Zero)';
+            }
+        });
+
+        // ------------------------------------------------------------------
+        // NOVO: RESET SEMANAL (ZERAR AÇÕES RPG E BÓNUS DOS ARTISTAS)
+        // ------------------------------------------------------------------
+        document.getElementById('btnResetWeek').addEventListener('click', async () => {
+            const confirmAction = confirm("ATENÇÃO: Desejas fazer o Reset Semanal do RPG? Isto irá zerar os limites de TODAS as ações de batalha e remover os bónus de TODOS os artistas.");
+            if (!confirmAction) return;
+
+            const btn = document.getElementById('btnResetWeek');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar Reset...';
+
+            try {
+                // Primeira tentativa: Tentar executar a função SQL (RPC) se ela existir
+                const { error: rpcError } = await supabaseClient.rpc('reset_semanal');
+
+                // Se a função SQL falhar (ex: nome errado ou não criada), ele faz o fallback para JS (Plano B)
+                if (rpcError) {
+                    console.log("Função SQL não encontrada ou falhou. A utilizar o método JavaScript como alternativa...");
+                    
+                    const { error: jsError } = await supabaseClient
+                        .from('artists')
+                        .update({
+                            promo_tv_count: 0,
+                            promo_radio_count: 0,
+                            promo_commercial_count: 0,
+                            promo_internet_count: 0,
+                            remix_count: 0,
+                            mv_count: 0,
+                            capas_count: 0,
+                            parceria_count: 0,
+                            promo_tv_bonus_claimed: false,
+                            promo_radio_bonus_claimed: false,
+                            promo_commercial_bonus_claimed: false,
+                            promo_internet_bonus_claimed: false,
+                            remix_bonus_claimed: false,
+                            mv_bonus_claimed: false,
+                            capas_bonus_claimed: false,
+                            parceria_bonus_claimed: false
+                        })
+                        .not('id', 'is', null);
+
+                    if (jsError) throw jsError;
+                }
+                
+                showToast("Reset Semanal concluído! As ações RPG estão prontas para a nova semana.");
+            } catch (err) {
+                alert("Erro ao fazer o reset: " + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-power-off"></i> Fazer Reset da Semana';
             }
         });
 
