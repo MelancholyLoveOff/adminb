@@ -447,13 +447,23 @@
         document.getElementById('closeSidebarBtn').addEventListener('click', toggleMobileMenu);
         sidebarOverlay.addEventListener('click', toggleMobileMenu);
 
-        function showToast(message) {
+      function showToast(message) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            
+            // Adicionado o ícone fa-times com o evento de clique para remover
+            toast.innerHTML = `
+                <i class="fas fa-check-circle"></i> 
+                <span style="flex-grow: 1;">${message}</span>
+                <i class="fas fa-times" style="cursor: pointer; margin-left: 16px; opacity: 0.7; font-size: 18px;" onclick="this.parentElement.remove()"></i>
+            `;
+            
             container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3000);
+            
+            setTimeout(() => { 
+                if(document.body.contains(toast)) toast.remove(); 
+            }, 3000);
         }
 
         const parsePgArray = (arr) => {
