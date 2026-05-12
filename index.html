@@ -406,6 +406,31 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_9uhuy6fpFduf-qsEXYf5wA_BDBB1OIZ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // 🔥 NOVA CONFIGURAÇÃO DO GOOGLE SHEETS
+        const GOOGLE_SHEETS_API_URL = "COLA_AQUI_O_TEU_URL_DO_APPS_SCRIPT";
+
+        // 🔥 FUNÇÃO: LÊ O TOP DO SUPABASE E GUARDA NA PLANILHA
+        async function salvarChartNoSheets() {
+            try {
+                const { data: songs } = await supabaseClient.from('songs').select('id, title, streams').order('streams', { ascending: false }).limit(50);
+                const { data: albums } = await supabaseClient.from('albums').select('id, title, weekly_streams').order('weekly_streams', { ascending: false }).limit(50);
+
+                const chartParaSalvar = [];
+
+                if(songs) songs.forEach((s, i) => chartParaSalvar.push({ id: s.id, type: "song", rank: i + 1, streams: s.streams || 0 }));
+                if(albums) albums.forEach((a, i) => chartParaSalvar.push({ id: a.id, type: "album", rank: i + 1, streams: a.weekly_streams || 0 }));
+
+                await fetch(GOOGLE_SHEETS_API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(chartParaSalvar),
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                console.log("Chart de hoje guardado com sucesso na Planilha Oficial!");
+            } catch (err) {
+                console.error("Erro ao guardar no Sheets:", err);
+            }
+        }
+
         // ==========================================
         // 0. CONTROLO MOBILE E TOASTS
         // ==========================================
@@ -450,7 +475,6 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Fechar menu mobile se estiver aberto
             if (window.innerWidth <= 768 && adminSidebar.classList.contains('open')) {
                 toggleMobileMenu();
             }
@@ -600,12 +624,7 @@
             if (!confirmDelete) return;
 
             try {
-                const { data: player, error: fetchError } = await supabaseClient
-                    .from('players')
-                    .select('artist_ids')
-                    .eq('id', id)
-                    .single();
-
+                const { data: player, error: fetchError } = await supabaseClient.from('players').select('artist_ids').eq('id', id).single();
                 if (fetchError) throw fetchError;
 
                 const artistIds = parsePgArray(player.artist_ids);
@@ -616,18 +635,12 @@
 
                     const { data: allSongs } = await supabaseClient.from('songs').select('id, artist_ids');
                     if (allSongs) {
-                        const songsToDelete = allSongs
-                            .filter(song => {
-                                const songArtists = parsePgArray(song.artist_ids);
-                                return songArtists.some(aid => artistIds.includes(aid));
-                            })
-                            .map(song => song.id);
-
-                        if (songsToDelete.length > 0) {
-                            await supabaseClient.from('songs').delete().in('id', songsToDelete);
-                        }
+                        const songsToDelete = allSongs.filter(song => {
+                            const songArtists = parsePgArray(song.artist_ids);
+                            return songArtists.some(aid => artistIds.includes(aid));
+                        }).map(song => song.id);
+                        if (songsToDelete.length > 0) await supabaseClient.from('songs').delete().in('id', songsToDelete);
                     }
-
                     await supabaseClient.from('artists').delete().in('id', artistIds);
                 }
 
@@ -637,7 +650,6 @@
                 showToast("Jogador e todo o catálogo eliminados com sucesso!");
                 loadPlayersData();
                 loadDashboardData();
-                
             } catch (error) { 
                 alert("Erro ao eliminar jogador e o seu catálogo: " + error.message); 
                 console.error(error);
@@ -681,7 +693,6 @@
             
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando Poster...';
             wrapper.style.transform = 'scale(1)';
-            
             captureArea.style.borderRadius = '0';
 
             html2canvas(captureArea, { scale: 1, useCORS: true, backgroundColor: '#121212' }).then(canvas => {
@@ -691,7 +702,6 @@
                 link.click();
                 
                 captureArea.style.borderRadius = '8px';
-                
                 const scaleValue = window.innerWidth <= 768 ? 'scale(0.26)' : 'scale(0.38)';
                 wrapper.style.transform = scaleValue; 
 
@@ -720,10 +730,7 @@
             selectRel.disabled = true;
 
             try {
-                const [allSongsReq] = await Promise.all([
-                    supabaseClient.from('songs').select('*')
-                ]);
-
+                const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
                 posterReleasesData = [];
 
                 if(adminCache.albums) {
@@ -748,7 +755,6 @@
                         const sgl = adminCache.singles.find(s => s.id === singleIds[0]);
                         if(sgl && sgl.image_url) cover = sgl.image_url;
                     }
-
                     posterReleasesData.push({ type: 'Música', title: song.title, cover: cover, streams: song.total_streams || song.streams || 0, artist: artistName });
                 });
 
@@ -795,10 +801,7 @@
             selectRel.disabled = true;
 
             try {
-                const [allSongsReq] = await Promise.all([
-                    supabaseClient.from('songs').select('*')
-                ]);
-
+                const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
                 updateReleasesData = [];
 
                 if(adminCache.albums) {
@@ -886,17 +889,20 @@
         });
 
         // ------------------------------------------------------------------
-        // ENCERRAR O DIA (Somar streams diários aos totais e repor a 0)
+        // ENCERRAR O DIA (Salvar na Planilha, Somar streams diários e repor a 0)
         // ------------------------------------------------------------------
         document.getElementById('btnCloseDay').addEventListener('click', async () => {
-            const confirmAction = confirm("ATENÇÃO: Deseja encerrar o dia? Isto irá somar os streams diários aos totais de TODAS as músicas e repor os streams do dia a zero para a próxima rodada.");
+            const confirmAction = confirm("ATENÇÃO: Deseja encerrar o dia? Isto irá primeiro guardar o Top 50 na Planilha Oficial, depois somar os streams diários aos totais e repor a zero para a próxima rodada.");
             if (!confirmAction) return;
 
             const btn = document.getElementById('btnCloseDay');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar catálogo...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar Chart e processar catálogo...';
 
             try {
+                // 🔥 NOVO: Envia as posições atuais para a Planilha ANTES de repor a zero!
+                await salvarChartNoSheets();
+
                 // 1. Procurar todas as músicas
                 const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, streams, total_streams');
                 if (songsErr) throw songsErr;
@@ -912,7 +918,7 @@
                     }
                 });
 
-                // Atualizar Músicas em Lotes (para não sobrecarregar a API)
+                // Atualizar Músicas em Lotes
                 const batchSize = 50;
                 for (let i = 0; i < songUpdates.length; i += batchSize) {
                     const batch = songUpdates.slice(i, i + batchSize);
@@ -951,7 +957,7 @@
                 await resetReleases('albums');
                 await resetReleases('singles');
 
-                showToast("Dia encerrado com sucesso! O Top de Charts foi atualizado.");
+                showToast("Dia encerrado com sucesso! O Top de Charts foi guardado e os streams repostos.");
             } catch (err) {
                 alert("Erro ao encerrar o dia: " + err.message);
                 console.error(err);
@@ -962,7 +968,7 @@
         });
 
         // ------------------------------------------------------------------
-        // NOVO: RESET SEMANAL (ZERAR AÇÕES RPG E BÓNUS DOS ARTISTAS)
+        // RESET SEMANAL (ZERAR AÇÕES RPG E BÓNUS DOS ARTISTAS)
         // ------------------------------------------------------------------
         document.getElementById('btnResetWeek').addEventListener('click', async () => {
             const confirmAction = confirm("ATENÇÃO: Desejas fazer o Reset Semanal do RPG? Isto irá zerar os limites de TODAS as ações de batalha e remover os bónus de TODOS os artistas.");
@@ -973,35 +979,20 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar Reset...';
 
             try {
-                // Primeira tentativa: Tentar executar a função SQL (RPC) se ela existir
                 const { error: rpcError } = await supabaseClient.rpc('reset_semanal');
 
-                // Se a função SQL falhar (ex: nome errado ou não criada), ele faz o fallback para JS (Plano B)
                 if (rpcError) {
                     console.log("Função SQL não encontrada ou falhou. A utilizar o método JavaScript como alternativa...");
-                    
                     const { error: jsError } = await supabaseClient
                         .from('artists')
                         .update({
-                            promo_tv_count: 0,
-                            promo_radio_count: 0,
-                            promo_commercial_count: 0,
-                            promo_internet_count: 0,
-                            remix_count: 0,
-                            mv_count: 0,
-                            capas_count: 0,
-                            parceria_count: 0,
-                            promo_tv_bonus_claimed: false,
-                            promo_radio_bonus_claimed: false,
-                            promo_commercial_bonus_claimed: false,
-                            promo_internet_bonus_claimed: false,
-                            remix_bonus_claimed: false,
-                            mv_bonus_claimed: false,
-                            capas_bonus_claimed: false,
-                            parceria_bonus_claimed: false
+                            promo_tv_count: 0, promo_radio_count: 0, promo_commercial_count: 0, promo_internet_count: 0,
+                            remix_count: 0, mv_count: 0, capas_count: 0, parceria_count: 0,
+                            promo_tv_bonus_claimed: false, promo_radio_bonus_claimed: false, promo_commercial_bonus_claimed: false,
+                            promo_internet_bonus_claimed: false, remix_bonus_claimed: false, mv_bonus_claimed: false,
+                            capas_bonus_claimed: false, parceria_bonus_claimed: false
                         })
                         .not('id', 'is', null);
-
                     if (jsError) throw jsError;
                 }
                 
