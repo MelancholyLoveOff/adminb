@@ -82,6 +82,10 @@
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--text-subdued); background-color: #333; }
         .form-group select:disabled, .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; cursor: pointer; }
+        .checkbox-group input { width: auto; cursor: pointer; transform: scale(1.2); }
+        .checkbox-group span { font-size: 13px; color: var(--text-subdued); font-weight: 600; }
+
         .btn-primary {
             background-color: var(--spotify-green); color: black; border: none; padding: 16px 32px;
             border-radius: 500px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%;
@@ -110,44 +114,16 @@
         }
         .circle-btn:hover { background: rgba(255,255,255,0.2); }
 
-        /* AREA DE PREVIEW DO POSTER COM ZOOM OUT */
-        .poster-preview-container {
-            display: flex; justify-content: center; align-items: flex-start;
-            background: var(--bg-base); padding: 20px; border-radius: 8px;
-            overflow: hidden; min-height: 600px;
-        }
-
-        .poster-scale-wrapper {
-            width: 1080px; height: 1350px;
-            transform: scale(0.38); transform-origin: top center;
-            margin-bottom: -837px;
-        }
-
-        .spotify-poster {
-            width: 1080px; height: 1350px;
-            background: linear-gradient(145deg, #4b134f, #121212);
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 40px;
-        }
-        .spotify-poster::before {
-            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-            opacity: 0.15; pointer-events: none; z-index: 1;
-        }
+        /* AREA DE PREVIEW DO POSTER */
+        .poster-preview-container { display: flex; justify-content: center; align-items: flex-start; background: var(--bg-base); padding: 20px; border-radius: 8px; overflow: hidden; min-height: 600px; }
+        .poster-scale-wrapper { width: 1080px; height: 1350px; transform: scale(0.38); transform-origin: top center; margin-bottom: -837px; }
+        .spotify-poster { width: 1080px; height: 1350px; background: linear-gradient(145deg, #4b134f, #121212); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+        .spotify-poster::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.15; pointer-events: none; z-index: 1; }
         .poster-content { position: relative; z-index: 2; width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .poster-cover {
-            width: 540px; height: 540px; object-fit: cover; border-radius: 12px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6); margin-bottom: 40px; border: 2px solid rgba(255,255,255,0.1);
-        }
+        .poster-cover { width: 540px; height: 540px; object-fit: cover; border-radius: 12px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); margin-bottom: 40px; border: 2px solid rgba(255,255,255,0.1); }
         .poster-title { font-size: 64px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
         .poster-artist { font-size: 32px; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 80px; }
-        .poster-milestone-number {
-            font-size: 160px; font-weight: 900; letter-spacing: -4px; line-height: 1;
-            background: linear-gradient(180deg, #FFFFFF 0%, #B3B3B3 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 12px;
-        }
+        .poster-milestone-number { font-size: 160px; font-weight: 900; letter-spacing: -4px; line-height: 1; background: linear-gradient(180deg, #FFFFFF 0%, #B3B3B3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 12px; }
         .poster-milestone-text { font-size: 38px; font-weight: 800; color: var(--spotify-green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; }
         .poster-timeframe { font-size: 28px; font-weight: 600; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.4); padding: 12px 32px; border-radius: 500px; backdrop-filter: blur(10px); }
         .poster-logo { position: absolute; bottom: 60px; display: flex; align-items: center; gap: 16px; font-size: 34px; font-weight: 700; color: #fff; opacity: 0.9; }
@@ -157,29 +133,18 @@
         .toast { background: var(--spotify-green); color: black; padding: 16px 24px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* RESPONSIVIDADE MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .mobile-topbar { display: flex; }
-            
-            .admin-sidebar {
-                position: fixed; left: -100%; top: 0; height: 100vh; z-index: 200;
-                transition: left 0.3s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.8);
-            }
+            .admin-sidebar { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 200; transition: left 0.3s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.8); }
             .admin-sidebar.open { left: 0; }
             .close-sidebar-btn { display: block; }
             .admin-sidebar h2 { margin-top: 8px; }
-
             .admin-main { padding: 24px 16px; height: auto; overflow-y: visible; }
             .admin-header h1 { font-size: 24px; }
-            
-            .poster-scale-wrapper {
-                transform: scale(0.26);
-                margin-bottom: -999px;
-            }
+            .poster-scale-wrapper { transform: scale(0.26); margin-bottom: -999px; }
             .poster-preview-container { min-height: 400px; padding: 10px; }
         }
-
     </style>
 </head>
 <body>
@@ -312,7 +277,7 @@
 
                 <div id="bulkRandomContainer" style="display: none; margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
                     <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-dice"></i> Sorteio de Streams nas Faixas</h3>
-                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Sorteia um valor aleatório para <strong>cada música</strong> deste álbum/single e soma automaticamente ao Diário e ao Total.</p>
+                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Sorteia um valor aleatório para <strong>cada música</strong> deste álbum/single e soma ao Diário e ao Total.</p>
 
                     <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                         <div class="form-group" style="flex: 1; margin-bottom: 0;">
@@ -324,10 +289,17 @@
                             <input type="number" id="dbMaxRandomInput" value="5000000">
                         </div>
                     </div>
+
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="chkReduceSelectedAlbum" checked>
+                        <span>Diminuir streams em 75% se for Intro/Outro/Interlude</span>
+                    </label>
+
                     <button class="btn-primary" id="btnRandomizeAlbum" style="background: linear-gradient(45deg, #1DB954, #121212); border: 1px solid #1DB954; color: white;">
                         <i class="fas fa-magic"></i> Sortear Faixas e Atualizar
                     </button>
                 </div>
+
                 <div style="margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
                     <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-history"></i> Streams de Catálogo Antigo</h3>
                     <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Soma diretamente no "Total" da música sem enviar para os Charts Diários.</p>
@@ -336,21 +308,25 @@
                         <label>Quantidade para Somar (Apenas Músicas)</label>
                         <input type="number" id="dbAddTotalInput" placeholder="Ex: 500000">
                     </div>
-                    <button class="btn-primary" id="btnAddTotalDb" style="background: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green); margin-bottom: 16px;">
+                    <button class="btn-primary" id="btnAddTotalDb" style="background: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green); margin-bottom: 20px;">
                         <i class="fas fa-plus"></i> Adicionar ao Total (Manual)
                     </button>
+
+                    <label class="checkbox-group" style="margin-bottom: 16px;">
+                        <input type="checkbox" id="chkReduceOldCatalog" checked>
+                        <span>Diminuir streams em 75% se for Intro/Outro/Interlude</span>
+                    </label>
 
                     <button class="btn-primary" id="btnRandomCatalog" style="background: linear-gradient(45deg, #1DB954, #121212); color: white; border: 1px solid #1DB954;">
                         <i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)
                     </button>
-
                 </div>
             </div>
 
             <div class="control-panel" style="max-width: 600px; margin-top: 24px; border: 1px solid var(--spotify-green); background: rgba(29, 185, 84, 0.05);">
                 <h3 style="margin-bottom: 12px; color: var(--spotify-green); font-size: 16px;"><i class="fas fa-globe"></i> Ações Globais</h3>
                 <p style="font-size: 13px; color: var(--text-subdued); margin-bottom: 16px; line-height: 1.5;">
-                    Utilize este botão para <strong>Encerrar o Dia</strong>. O sistema irá varrer toda a base de dados e <strong>repor as contagens diárias/semanais a zero</strong> para a próxima rodada. Isto atualizará o Top Oficial de imediato após guardar o histórico.
+                    Utilize este botão para <strong>Encerrar o Dia</strong>. O sistema irá varrer toda a base de dados e <strong>repor as contagens diárias/semanais a zero</strong>.
                 </p>
                 <button class="btn-primary" id="btnCloseDay" style="background-color: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green);">
                     <i class="fas fa-calendar-check"></i> Encerrar Dia (Repor a Zero)
@@ -360,13 +336,12 @@
             <div class="control-panel" style="max-width: 600px; margin-top: 24px; border: 1px solid var(--trend-down-red); background: rgba(226, 33, 52, 0.05);">
                 <h3 style="margin-bottom: 12px; color: var(--trend-down-red); font-size: 16px;"><i class="fas fa-calendar-times"></i> Reset Semanal (Limpar RPG)</h3>
                 <p style="font-size: 13px; color: var(--text-subdued); margin-bottom: 16px; line-height: 1.5;">
-                    Utilize este botão no início de uma nova semana do RPG. Esta ação irá <strong>zerar as contagens de limite de ações de todos os artistas</strong> (ex: Limites de Divulgação em TV, Rádios, MVs, etc.) e removerá os status de bónus para que possam ser ganhos novamente.
+                    Utilize este botão no início de uma nova semana para zerar os limites de ações de batalha de todos os artistas.
                 </p>
                 <button class="btn-primary" id="btnResetWeek" style="background-color: transparent; border: 2px solid var(--trend-down-red); color: var(--trend-down-red);">
                     <i class="fas fa-power-off"></i> Fazer Reset da Semana
                 </button>
             </div>
-
         </section>
 
         <section id="posterSection" style="display: none;">
@@ -377,24 +352,15 @@
 
             <div class="poster-creator-layout">
                 <div class="control-panel">
-                    
                     <div class="form-group" style="background: rgba(29, 185, 84, 0.1); padding: 16px; border-radius: 8px; border: 1px solid rgba(29, 185, 84, 0.3);">
-                        <label style="color: var(--spotify-green); font-size: 14px; margin-bottom: 16px; display: block;">
-                            <i class="fas fa-magic"></i> Preenchimento Automático
-                        </label>
-
+                        <label style="color: var(--spotify-green); font-size: 14px; margin-bottom: 16px; display: block;"><i class="fas fa-magic"></i> Preenchimento Automático</label>
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label style="color: var(--text-base);">1. Artista</label>
-                            <select id="posterArtistSelect" style="background: rgba(0,0,0,0.5);">
-                                <option value="">A carregar artistas...</option>
-                            </select>
+                            <select id="posterArtistSelect" style="background: rgba(0,0,0,0.5);"><option value="">A carregar artistas...</option></select>
                         </div>
-
                         <div class="form-group" style="margin-bottom: 0;">
                             <label style="color: var(--text-base);">2. Lançamento / Música</label>
-                            <select id="posterReleaseSelect" disabled style="background: rgba(0,0,0,0.5);">
-                                <option value="">Selecione um artista primeiro...</option>
-                            </select>
+                            <select id="posterReleaseSelect" disabled style="background: rgba(0,0,0,0.5);"><option value="">Selecione um artista primeiro...</option></select>
                         </div>
                     </div>
 
@@ -431,54 +397,43 @@
                 </div>
             </div>
         </section>
-
     </main>
 
     <div id="toastContainer"></div>
 
     <script>
-        // CONFIGURAÇÃO SUPABASE
         const SUPABASE_URL = 'https://avlgxwymwotffookkimg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_9uhuy6fpFduf-qsEXYf5wA_BDBB1OIZ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // 🔥 NOVA CONFIGURAÇÃO DO GOOGLE SHEETS
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxBd7onVw6zTqRStKsWdEvzrn3kOUjZ33nfJ6UjsW9TRE4S6au9XVVW1ngOgl8oAmdWeg/exec";
 
-        // 🔥 FUNÇÃO: LÊ O TOP DO SUPABASE E GUARDA NA PLANILHA
+        // AUXILIAR: VERIFICA SE A FAIXA É INTEGRANTE SECUNDÁRIA (INTRO/OUTRO/INTERLUDE)
+        function verificarFaixaSecundaria(song) {
+            if (!song) return false;
+            const titleLower = (song.title || "").toLowerCase();
+            const typeLower = (song.track_type || "").toLowerCase();
+            return titleLower.includes('intro') || titleLower.includes('outro') || titleLower.includes('interlude') ||
+                   typeLower.includes('intro') || typeLower.includes('outro') || typeLower.includes('interlude');
+        }
+
         async function salvarChartNoSheets() {
             try {
                 const { data: songs } = await supabaseClient.from('songs').select('id, title, streams').order('streams', { ascending: false }).limit(50);
                 const { data: albums } = await supabaseClient.from('albums').select('id, title, weekly_streams').order('weekly_streams', { ascending: false }).limit(50);
-
                 const chartParaSalvar = [];
-
                 if(songs) songs.forEach((s, i) => chartParaSalvar.push({ id: s.id, type: "song", rank: i + 1, streams: s.streams || 0 }));
                 if(albums) albums.forEach((a, i) => chartParaSalvar.push({ id: a.id, type: "album", rank: i + 1, streams: a.weekly_streams || 0 }));
-
-                await fetch(GOOGLE_SHEETS_API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(chartParaSalvar),
-                    headers: { 'Content-Type': 'text/plain' }
-                });
-                console.log("Chart de hoje guardado com sucesso na Planilha Oficial!");
-            } catch (err) {
-                console.error("Erro ao guardar no Sheets:", err);
-            }
+                await fetch(GOOGLE_SHEETS_API_URL, { method: "POST", body: JSON.stringify(chartParaSalvar), headers: { 'Content-Type': 'text/plain' } });
+            } catch (err) { console.error("Erro ao guardar no Sheets:", err); }
         }
 
-        // ==========================================
-        // 0. CONTROLO MOBILE E TOASTS
-        // ==========================================
         const adminSidebar = document.getElementById('adminSidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         function toggleMobileMenu() {
             adminSidebar.classList.toggle('open');
             sidebarOverlay.classList.toggle('active');
-            document.body.style.overflow = adminSidebar.classList.contains('open') ? 'hidden' : '';
         }
-
         document.getElementById('menuToggleBtn').addEventListener('click', toggleMobileMenu);
         document.getElementById('closeSidebarBtn').addEventListener('click', toggleMobileMenu);
         sidebarOverlay.addEventListener('click', toggleMobileMenu);
@@ -487,19 +442,9 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast';
-            
-            // Adicionado o ícone fa-times com o evento de clique para remover
-            toast.innerHTML = `
-                <i class="fas fa-check-circle"></i> 
-                <span style="flex-grow: 1;">${message}</span>
-                <i class="fas fa-times" style="cursor: pointer; margin-left: 16px; opacity: 0.7; font-size: 18px;" onclick="this.parentElement.remove()"></i>
-            `;
-            
+            toast.innerHTML = `<i class="fas fa-check-circle"></i><span style="flex-grow:1;">${message}</span><i class="fas fa-times" style="cursor:pointer;margin-left:16px;opacity:0.7;" onclick="this.parentElement.remove()"></i>`;
             container.appendChild(toast);
-            
-            setTimeout(() => { 
-                if(document.body.contains(toast)) toast.remove(); 
-            }, 3000);
+            setTimeout(() => { if(document.body.contains(toast)) toast.remove(); }, 3000);
         }
 
         const parsePgArray = (arr) => {
@@ -508,32 +453,18 @@
             return [];
         };
 
-        // ==========================================
-        // 1. NAVEGAÇÃO DE ABAS E CARREGAMENTO
-        // ==========================================
         function switchSection(sectionId, btn) {
-            document.getElementById('posterSection').style.display = 'none';
-            document.getElementById('updateChartsSection').style.display = 'none';
-            document.getElementById('dashboardSection').style.display = 'none';
-            document.getElementById('playersSection').style.display = 'none';
-            
+            ['posterSection', 'updateChartsSection', 'dashboardSection', 'playersSection'].forEach(s => document.getElementById(s).style.display = 'none');
             document.getElementById(sectionId).style.display = 'block';
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            if (window.innerWidth <= 768 && adminSidebar.classList.contains('open')) {
-                toggleMobileMenu();
-            }
-
-            if (sectionId === 'dashboardSection') { loadDashboardData(); }
-            if (sectionId === 'playersSection') { loadPlayersData(); }
-            if (sectionId === 'posterSection') { loadAdminCache().then(() => populateArtistSelect('posterArtistSelect')); }
-            if (sectionId === 'updateChartsSection') { loadAdminCache().then(() => populateArtistSelect('updateArtistSelect')); }
+            if (window.innerWidth <= 768) toggleMobileMenu();
+            if (sectionId === 'dashboardSection') loadDashboardData();
+            if (sectionId === 'playersSection') loadPlayersData();
+            if (sectionId === 'posterSection') loadAdminCache().then(() => populateArtistSelect('posterArtistSelect'));
+            if (sectionId === 'updateChartsSection') loadAdminCache().then(() => populateArtistSelect('updateArtistSelect'));
         }
 
-        // ==========================================
-        // CARREGAMENTO GLOBAL DE ARTISTAS
-        // ==========================================
         let adminCache = { artists: [], albums: [], singles: [] };
         let isArtistsLoaded = false;
 
@@ -549,26 +480,16 @@
                 adminCache.albums = albRes.data || [];
                 adminCache.singles = sinRes.data || [];
                 isArtistsLoaded = true;
-            } catch(e) { console.error("Erro ao carregar o cache:", e); }
+            } catch(e) { console.error(e); }
         }
         
         function populateArtistSelect(selectId) {
             const select = document.getElementById(selectId);
             if (select.options.length > 1) return; 
-            
             select.innerHTML = '<option value="" disabled selected>Escolha um artista...</option>';
-            if(adminCache.artists.length > 0) {
-                adminCache.artists.forEach(a => select.innerHTML += `<option value="${a.id}">${a.name}</option>`);
-            } else if (!isArtistsLoaded) {
-                select.innerHTML = '<option value="">A carregar...</option>';
-            } else {
-                select.innerHTML = '<option value="">Nenhum artista encontrado</option>';
-            }
+            adminCache.artists.forEach(a => select.innerHTML += `<option value="${a.id}">${a.name}</option>`);
         }
 
-        // ==========================================
-        // 2. LÓGICA DO DASHBOARD GERAL
-        // ==========================================
         async function loadDashboardData() {
             try {
                 const [playersReq, artistsReq, albumsReq, singlesReq, songsReq] = await Promise.all([
@@ -578,729 +499,191 @@
                     supabaseClient.from('singles').select('id', { count: 'exact' }),
                     supabaseClient.from('songs').select('id', { count: 'exact' })
                 ]);
-
                 document.getElementById('stat-players').innerText = playersReq.count || 0;
                 document.getElementById('stat-artists').innerText = artistsReq.count || 0;
                 document.getElementById('stat-releases').innerText = (albumsReq.count || 0) + (singlesReq.count || 0);
                 document.getElementById('stat-songs').innerText = songsReq.count || 0;
 
-                const players = playersReq.data || [];
-                const artists = artistsReq.data || [];
-                const tbody = document.getElementById('dashboard-players-tbody');
-                
-                if (players.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="2">Nenhum jogador encontrado na base de dados.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                players.forEach(player => {
-                    const artistIds = parsePgArray(player.artist_ids);
-                    const playerArtists = artistIds.map(id => {
-                        const a = artists.find(art => art.id === id);
-                        return a ? a.name : 'Desconhecido';
-                    });
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong style="color: var(--text-base);">${player.name}</strong></td>
-                        <td>${playerArtists.length > 0 ? playerArtists.join(', ') : '<span style="color:var(--text-subdued)">Nenhum artista vinculado</span>'}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) { console.error("Erro ao carregar Dashboard:", error); }
+                document.getElementById('dashboard-players-tbody').innerHTML = (playersReq.data || []).map(p => {
+                    const arts = parsePgArray(p.artist_ids).map(id => artistsReq.data.find(a => a.id === id)?.name || 'Desconhecido').join(', ');
+                    return `<tr><td><strong>${p.name}</strong></td><td>${arts || 'Nenhum'}</td></tr>`;
+                }).join('');
+            } catch (e) { console.error(e); }
         }
 
-        // ==========================================
-        // 2.1. LÓGICA DE GESTÃO DE JOGADORES
-        // ==========================================
         async function loadPlayersData() {
             try {
                 const [playersReq, artistsReq] = await Promise.all([
                     supabaseClient.from('players').select('id, name, artist_ids').order('name'),
                     supabaseClient.from('artists').select('id, name')
                 ]);
-
-                const players = playersReq.data || [];
-                const artists = artistsReq.data || [];
-                const tbody = document.getElementById('manage-players-tbody');
-                
-                if (players.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3">Nenhum jogador encontrado.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                players.forEach(player => {
-                    const artistIds = parsePgArray(player.artist_ids);
-                    const playerArtists = artistIds.map(id => {
-                        const a = artists.find(art => art.id === id);
-                        return a ? a.name : 'Desconhecido';
-                    });
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong style="color: var(--text-base);">${player.name}</strong></td>
-                        <td>${playerArtists.length > 0 ? playerArtists.join(', ') : '<span style="color:var(--text-subdued)">Nenhum artista vinculado</span>'}</td>
-                        <td style="display: flex; gap: 8px;">
-                            <button class="circle-btn edit-player-btn" onclick="editPlayerName('${player.id}', '${player.name}')" title="Editar Nome"><i class="fas fa-pencil-alt"></i></button>
-                            <button class="circle-btn delete-player-btn" onclick="deletePlayer('${player.id}', '${player.name}')" style="color: var(--trend-down-red);" title="Eliminar Jogador"><i class="fas fa-trash-alt"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) { console.error("Erro ao carregar Jogadores:", error); }
+                document.getElementById('manage-players-tbody').innerHTML = (playersReq.data || []).map(p => {
+                    const arts = parsePgArray(p.artist_ids).map(id => artistsReq.data.find(a => a.id === id)?.name || 'Desconhecido').join(', ');
+                    return `<tr><td><strong>${p.name}</strong></td><td>${arts || 'Nenhum'}</td><td><button class="circle-btn" onclick="editPlayerName('${p.id}', '${p.name}')"><i class="fas fa-pencil-alt"></i></button></td></tr>`;
+                }).join('');
+            } catch (e) { console.error(e); }
         }
 
         async function editPlayerName(id, currentName) {
             const newName = prompt("Insira o novo nome para o jogador:", currentName);
             if (!newName || newName.trim() === "" || newName === currentName) return;
-
-            try {
-                const { error } = await supabaseClient.from('players').update({ name: newName.trim() }).eq('id', id);
-                if (error) throw error;
-                showToast("Nome do utilizador atualizado com sucesso!");
-                loadPlayersData();
-                loadDashboardData();
-            } catch (error) { alert("Erro ao atualizar nome: " + error.message); }
+            await supabaseClient.from('players').update({ name: newName.trim() }).eq('id', id);
+            loadPlayersData();
         }
 
-        async function deletePlayer(id, name) {
-            const confirmDelete = confirm(`Tem a certeza que deseja eliminar o jogador "${name}" e TODO o seu catálogo (artistas, álbuns, singles e músicas)? Esta ação não pode ser desfeita.`);
-            if (!confirmDelete) return;
-
-            try {
-                const { data: player, error: fetchError } = await supabaseClient.from('players').select('artist_ids').eq('id', id).single();
-                if (fetchError) throw fetchError;
-
-                const artistIds = parsePgArray(player.artist_ids);
-
-                if (artistIds.length > 0) {
-                    await supabaseClient.from('albums').delete().in('artist_id', artistIds);
-                    await supabaseClient.from('singles').delete().in('artist_id', artistIds);
-
-                    const { data: allSongs } = await supabaseClient.from('songs').select('id, artist_ids');
-                    if (allSongs) {
-                        const songsToDelete = allSongs.filter(song => {
-                            const songArtists = parsePgArray(song.artist_ids);
-                            return songArtists.some(aid => artistIds.includes(aid));
-                        }).map(song => song.id);
-                        if (songsToDelete.length > 0) await supabaseClient.from('songs').delete().in('id', songsToDelete);
-                    }
-                    await supabaseClient.from('artists').delete().in('id', artistIds);
-                }
-
-                const { error } = await supabaseClient.from('players').delete().eq('id', id);
-                if (error) throw error;
-
-                showToast("Jogador e todo o catálogo eliminados com sucesso!");
-                loadPlayersData();
-                loadDashboardData();
-            } catch (error) { 
-                alert("Erro ao eliminar jogador e o seu catálogo: " + error.message); 
-                console.error(error);
-            }
-        }
-
-        // ==========================================
-        // 3. LÓGICA DO GERADOR DE POSTERS
-        // ==========================================
-        const inputs = {
-            cover: document.getElementById('inputCover'), title: document.getElementById('inputTitle'),
-            artist: document.getElementById('inputArtist'), number: document.getElementById('inputNumber'),
-            text: document.getElementById('inputText'), timeframe: document.getElementById('inputTimeframe'),
-            color: document.getElementById('inputColor')
-        };
-        const poster = {
-            container: document.getElementById('captureArea'), cover: document.getElementById('posterCover'),
-            title: document.getElementById('posterTitle'), artist: document.getElementById('posterArtist'),
-            number: document.getElementById('posterNumber'), text: document.getElementById('posterText'),
-            timeframe: document.getElementById('posterTimeframe')
-        };
+        // POSTER ENGINE
+        const inputs = { cover: document.getElementById('inputCover'), title: document.getElementById('inputTitle'), artist: document.getElementById('inputArtist'), number: document.getElementById('inputNumber'), text: document.getElementById('inputText'), timeframe: document.getElementById('inputTimeframe'), color: document.getElementById('inputColor') };
+        const poster = { container: document.getElementById('captureArea'), cover: document.getElementById('posterCover'), title: document.getElementById('posterTitle'), artist: document.getElementById('posterArtist'), number: document.getElementById('posterNumber'), text: document.getElementById('posterText'), timeframe: document.getElementById('posterTimeframe') };
 
         function updatePoster() {
-            poster.cover.src = inputs.cover.value || 'https://i.imgur.com/AD3MbBi.png';
-            poster.title.textContent = inputs.title.value || 'Título';
-            poster.artist.textContent = inputs.artist.value || 'Artista';
-            poster.number.textContent = inputs.number.value || '0';
-            poster.text.textContent = inputs.text.value || 'STREAMS';
-            
-            if (inputs.timeframe.value) { poster.timeframe.style.display = 'inline-block'; poster.timeframe.textContent = inputs.timeframe.value; } 
-            else { poster.timeframe.style.display = 'none'; }
-            poster.container.style.background = `linear-gradient(145deg, ${inputs.color.value}, #121212)`;
+            poster.cover.src = inputs.cover.value; poster.title.textContent = inputs.title.value; poster.artist.textContent = inputs.artist.value; poster.number.textContent = inputs.number.value; poster.text.textContent = inputs.text.value;
+            poster.timeframe.textContent = inputs.timeframe.value; poster.container.style.background = `linear-gradient(145deg, ${inputs.color.value}, #121212)`;
         }
-
-        Object.values(inputs).forEach(input => input.addEventListener('input', updatePoster));
+        Object.values(inputs).forEach(i => i.addEventListener('input', updatePoster));
 
         document.getElementById('btnDownload').addEventListener('click', () => {
-            const captureArea = document.getElementById('captureArea');
-            const wrapper = document.getElementById('scaleWrapper');
-            const btn = document.getElementById('btnDownload');
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando Poster...';
-            wrapper.style.transform = 'scale(1)';
-            captureArea.style.borderRadius = '0';
-
-            html2canvas(captureArea, { scale: 1, useCORS: true, backgroundColor: '#121212' }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `poster-${inputs.title.value.replace(/\s+/g, '-').toLowerCase()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                
-                captureArea.style.borderRadius = '8px';
-                const scaleValue = window.innerWidth <= 768 ? 'scale(0.26)' : 'scale(0.38)';
-                wrapper.style.transform = scaleValue; 
-
-                btn.innerHTML = '<i class="fas fa-download"></i> Baixar Poster PNG (HD)';
-                showToast("Poster exportado com sucesso!");
-            }).catch(err => {
-                const scaleValue = window.innerWidth <= 768 ? 'scale(0.26)' : 'scale(0.38)';
-                wrapper.style.transform = scaleValue; 
-                captureArea.style.borderRadius = '8px';
-                btn.innerHTML = '<i class="fas fa-download"></i> Baixar Poster PNG (HD)';
-                alert("Erro. A imagem da capa bloqueou o download (Problema de CORS).");
+            const area = document.getElementById('captureArea');
+            html2canvas(area, { useCORS: true, backgroundColor: '#121212' }).then(canvas => {
+                const link = document.createElement('a'); link.download = 'poster.png'; link.href = canvas.toDataURL(); link.click();
             });
         });
 
-        // ==================================================================
-        // LÓGICA DE PREENCHIMENTO AUTOMÁTICO PARA POSTER
-        // ==================================================================
         let posterReleasesData = [];
-
         document.getElementById('posterArtistSelect').addEventListener('change', async (e) => {
             const artistId = e.target.value;
-            const artistName = e.target.options[e.target.selectedIndex].text;
             const selectRel = document.getElementById('posterReleaseSelect');
-            
-            selectRel.innerHTML = '<option value="">A carregar catálogo...</option>';
-            selectRel.disabled = true;
+            const { data: songs } = await supabaseClient.from('songs').select('*');
+            posterReleasesData = [];
 
-            try {
-                // Puxamos todas as músicas para fazer a soma dinâmica (estilo Spotify)
-                const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
-                const allSongs = allSongsReq.data || [];
-                posterReleasesData = [];
-
-                if(adminCache.albums) {
-                    const albums = adminCache.albums.filter(a => a.artist_id === artistId);
-                    albums.forEach(a => {
-                        // SOMA SPOTIFY: Filtra as músicas do álbum e soma os streams delas
-                        const albumSongs = allSongs.filter(song => parsePgArray(song.album_ids).includes(a.id));
-                        const sumStreams = albumSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
-                        
-                        posterReleasesData.push({ type: 'Álbum', title: a.title, cover: a.image_url, streams: sumStreams, artist: artistName });
-                    });
-                }
-                if(adminCache.singles) {
-                    const singles = adminCache.singles.filter(s => s.artist_id === artistId);
-                    singles.forEach(s => {
-                        // SOMA SPOTIFY: Filtra as músicas do single e soma os streams delas
-                        const singleSongs = allSongs.filter(song => parsePgArray(song.single_ids).includes(s.id));
-                        const sumStreams = singleSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
-                        
-                        posterReleasesData.push({ type: 'Single', title: s.title, cover: s.image_url, streams: sumStreams, artist: artistName });
-                    });
-                }
-                
-                const artistSongs = allSongs.filter(song => parsePgArray(song.artist_ids).includes(artistId));
-                artistSongs.forEach(song => {
-                    let cover = "https://i.imgur.com/AD3MbBi.png";
-                    const albumIds = parsePgArray(song.album_ids);
-                    const singleIds = parsePgArray(song.single_ids);
-                    
-                    if (albumIds.length > 0) {
-                        const alb = adminCache.albums.find(a => a.id === albumIds[0]);
-                        if(alb && alb.image_url) cover = alb.image_url;
-                    } else if (singleIds.length > 0) {
-                        const sgl = adminCache.singles.find(s => s.id === singleIds[0]);
-                        if(sgl && sgl.image_url) cover = sgl.image_url;
-                    }
-                    const songStreams = (song.total_streams || 0) + (song.streams || 0);
-                    posterReleasesData.push({ type: 'Música', title: song.title, cover: cover, streams: songStreams, artist: artistName });
-                });
-
-                if(posterReleasesData.length === 0) {
-                    selectRel.innerHTML = '<option value="" disabled>Nenhum lançamento encontrado</option>';
-                } else {
-                    selectRel.innerHTML = '<option value="" disabled selected>Selecione um lançamento...</option>';
-                    posterReleasesData.sort((a,b) => (b.streams || 0) - (a.streams || 0));
-                    
-                    posterReleasesData.forEach((item, idx) => {
-                        selectRel.innerHTML += `<option value="${idx}">[${item.type}] ${item.title} (${Number(item.streams || 0).toLocaleString('pt-BR')} streams)</option>`;
-                    });
-                    selectRel.disabled = false;
-                }
-            } catch(err) {
-                console.error("Erro ao procurar o catálogo do artista:", err);
-                selectRel.innerHTML = '<option value="" disabled>Erro ao carregar catálogo</option>';
-            }
+            adminCache.albums.filter(a => a.artist_id === artistId).forEach(a => {
+                const total = songs.filter(s => parsePgArray(s.album_ids).includes(a.id)).reduce((acc, s) => acc + (s.total_streams || 0), 0);
+                posterReleasesData.push({ type: 'Álbum', title: a.title, cover: a.image_url, streams: total, artist: e.target.options[e.target.selectedIndex].text });
+            });
+            selectRel.innerHTML = '<option value="" disabled selected>Selecione um lançamento...</option>' + posterReleasesData.map((item, idx) => `<option value="${idx}">[${item.type}] ${item.title}</option>`).join('');
+            selectRel.disabled = false;
         });
 
         document.getElementById('posterReleaseSelect').addEventListener('change', (e) => {
             const item = posterReleasesData[e.target.value];
-            if(item) {
-                inputs.title.value = item.title;
-                inputs.artist.value = item.artist;
-                inputs.cover.value = item.cover || 'https://i.imgur.com/AD3MbBi.png';
-                inputs.number.value = item.streams ? Number(item.streams).toLocaleString('pt-BR') : '0';
-                
-                updatePoster();
-                showToast("Dados importados para o Poster!");
-            }
+            if(item) { inputs.title.value = item.title; inputs.artist.value = item.artist; inputs.cover.value = item.cover; inputs.number.value = item.streams.toLocaleString('pt-BR'); updatePoster(); }
         });
 
-        // ==========================================
-        // 4. LÓGICA DO SUPABASE (Atualizar Charts e Encerrar Dia)
-        // ==========================================
+        // CHARTS ENGINE E SELEÇÃO DE CATÁLOGO
         let updateReleasesData = [];
-
         document.getElementById('updateArtistSelect').addEventListener('change', async (e) => {
             const artistId = e.target.value;
             const selectRel = document.getElementById('updateReleaseSelect');
-            
-            selectRel.innerHTML = '<option value="">A carregar catálogo...</option>';
-            selectRel.disabled = true;
-            
-            // Esconde o painel de sorteio ao trocar de artista
-            const bulkContainer = document.getElementById('bulkRandomContainer');
-            if(bulkContainer) bulkContainer.style.display = 'none';
+            const { data: songs } = await supabaseClient.from('songs').select('*');
+            updateReleasesData = [];
 
-            try {
-                const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
-                const allSongs = allSongsReq.data || [];
-                updateReleasesData = [];
+            adminCache.albums.filter(a => a.artist_id === artistId).forEach(a => {
+                const total = songs.filter(s => parsePgArray(s.album_ids).includes(a.id)).reduce((acc, s) => acc + (s.total_streams || 0), 0);
+                updateReleasesData.push({ id: a.id, table: 'albums', type: 'Álbum', title: a.title, streams: a.weekly_streams || 0, total_streams: total });
+            });
+            songs.filter(s => parsePgArray(s.artist_ids).includes(artistId)).forEach(s => {
+                updateReleasesData.push({ id: s.id, table: 'songs', type: 'Música', title: s.title, streams: s.streams || 0, total_streams: s.total_streams || 0 });
+            });
 
-                if(adminCache.albums) {
-                    const albums = adminCache.albums.filter(a => a.artist_id === artistId);
-                    albums.forEach(a => {
-                        const albumSongs = allSongs.filter(song => parsePgArray(song.album_ids).includes(a.id));
-                        const sumTotalStreams = albumSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
-                        
-                        updateReleasesData.push({ 
-                            id: a.id, table: 'albums', type: 'Álbum', title: a.title, 
-                            streams: a.weekly_streams || 0, total_streams: sumTotalStreams 
-                        });
-                    });
-                }
-                if(adminCache.singles) {
-                    const singles = adminCache.singles.filter(s => s.artist_id === artistId);
-                    singles.forEach(s => {
-                        const singleSongs = allSongs.filter(song => parsePgArray(song.single_ids).includes(s.id));
-                        const sumTotalStreams = singleSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
-                        
-                        updateReleasesData.push({ 
-                            id: s.id, table: 'singles', type: 'Single', title: s.title, 
-                            streams: s.weekly_streams || 0, total_streams: sumTotalStreams 
-                        });
-                    });
-                }
-                
-                const artistSongs = allSongs.filter(song => parsePgArray(song.artist_ids).includes(artistId));
-                artistSongs.forEach(song => {
-                    updateReleasesData.push({ 
-                        id: song.id, table: 'songs', type: 'Música', title: song.title, 
-                        streams: song.streams || 0, total_streams: song.total_streams || 0 
-                    });
-                });
-
-                if(updateReleasesData.length === 0) {
-                    selectRel.innerHTML = '<option value="" disabled>Nenhum lançamento encontrado</option>';
-                } else {
-                    selectRel.innerHTML = '<option value="" disabled selected>Selecione um lançamento...</option>';
-                    updateReleasesData.sort((a,b) => (b.total_streams || 0) - (a.total_streams || 0));
-                    
-                    updateReleasesData.forEach((item, idx) => {
-                        selectRel.innerHTML += `<option value="${idx}">[${item.type}] ${item.title}</option>`;
-                    });
-                    selectRel.disabled = false;
-                }
-            } catch(err) {
-                console.error("Erro ao carregar o catálogo para update:", err);
-                selectRel.innerHTML = '<option value="" disabled>Erro ao carregar catálogo</option>';
-            }
+            selectRel.innerHTML = '<option value="" disabled selected>Selecione um lançamento...</option>' + updateReleasesData.map((item, idx) => `<option value="${idx}">[${item.type}] ${item.title}</option>`).join('');
+            selectRel.disabled = false;
         });
 
         document.getElementById('updateReleaseSelect').addEventListener('change', (e) => {
             const item = updateReleasesData[e.target.value];
             if(item) {
-                document.getElementById('dbStreamsInput').value = item.streams || 0;
-                document.getElementById('dbTotalStreamsInput').value = item.total_streams || 0;
-                
-                const bulkContainer = document.getElementById('bulkRandomContainer');
-
-                // Se for álbum ou single, não permite editar o TOTAL aqui (porque o total deles é a soma das músicas).
-                if (item.table !== 'songs') {
-                    document.getElementById('dbTotalStreamsInput').disabled = true;
-                    document.getElementById('dbAddTotalInput').disabled = true;
-                    document.getElementById('btnAddTotalDb').disabled = true;
-                    document.getElementById('btnAddTotalDb').title = "Para editar o Total, atualize as músicas individuais do álbum.";
-
-                    // Mostrar bloco de Sorteio
-                    if(bulkContainer) bulkContainer.style.display = 'block';
-
-                    showToast("Dados carregados. (Total do Álbum é calculado pelas músicas)");
-                } else {
-                    document.getElementById('dbTotalStreamsInput').disabled = false;
-                    document.getElementById('dbAddTotalInput').disabled = false;
-                    document.getElementById('btnAddTotalDb').disabled = false;
-                    document.getElementById('btnAddTotalDb').title = "";
-
-                    // Esconder bloco de Sorteio
-                    if(bulkContainer) bulkContainer.style.display = 'none';
-
-                    showToast("Dados de streams da música carregados com sucesso!");
-                }
+                document.getElementById('dbStreamsInput').value = item.streams;
+                document.getElementById('dbTotalStreamsInput').value = item.total_streams;
+                document.getElementById('bulkRandomContainer').style.display = item.table !== 'songs' ? 'block' : 'none';
             }
         });
 
         document.getElementById('btnSaveDb').addEventListener('click', async () => {
-            const selectRel = document.getElementById('updateReleaseSelect');
-            if (!selectRel.value) { alert('Selecione uma música ou álbum primeiro!'); return; }
+            const idx = document.getElementById('updateReleaseSelect').value;
+            const item = updateReleasesData[idx];
+            const s = parseInt(document.getElementById('dbStreamsInput').value);
+            const t = parseInt(document.getElementById('dbTotalStreamsInput').value);
 
-            const item = updateReleasesData[selectRel.value];
-            const streams = parseInt(document.getElementById('dbStreamsInput').value);
-            const totalStreams = parseInt(document.getElementById('dbTotalStreamsInput').value); 
-            const btn = document.getElementById('btnSaveDb');
-
-            if (isNaN(streams)) { alert('Insira números válidos nos Streams Diários/Semanais!'); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-
-            let updatePayload = {};
-            if (item.table === 'songs') {
-                if (isNaN(totalStreams)) { alert('Insira número válido no Total!'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Substituir Valores Atuais'; return; }
-                updatePayload = { streams: streams, total_streams: totalStreams };
-            } else {
-                updatePayload = { weekly_streams: streams };
-            }
-
-            const { error } = await supabaseClient.from(item.table).update(updatePayload).eq('id', item.id);
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Substituir Valores Atuais';
-
-            if (error) { 
-                alert('Erro ao salvar: ' + error.message); 
-            } else { 
-                showToast(`Streams diários de "${item.title}" atualizados com sucesso!`);
-                item.streams = streams;
-                if(item.table === 'songs') item.total_streams = totalStreams;
-            }
+            let payload = item.table === 'songs' ? { streams: s, total_streams: t } : { weekly_streams: s };
+            await supabaseClient.from(item.table).update(payload).eq('id', item.id);
+            showToast("Valores consolidados!");
         });
 
         // ------------------------------------------------------------------
-        // NOVO: SORTEIO EM MASSA NAS FAIXAS DE UM ÁLBUM/SINGLE
+        // LÓGICA ATUALIZADA: SORTEIO EM ÁLBUM SELECIONADO COM FILTRO DE REDUÇÃO
         // ------------------------------------------------------------------
         document.getElementById('btnRandomizeAlbum').addEventListener('click', async () => {
-            const selectRel = document.getElementById('updateReleaseSelect');
-            if (!selectRel.value) return;
-            const item = updateReleasesData[selectRel.value];
+            const item = updateReleasesData[document.getElementById('updateReleaseSelect').value];
+            const min = parseInt(document.getElementById('dbMinRandomInput').value) || 0;
+            const max = parseInt(document.getElementById('dbMaxRandomInput').value) || 0;
+            const aplicarReducao = document.getElementById('chkReduceSelectedAlbum').checked;
 
-            const minStr = parseInt(document.getElementById('dbMinRandomInput').value) || 0;
-            const maxStr = parseInt(document.getElementById('dbMaxRandomInput').value) || 0;
+            const { data: songs } = await supabaseClient.from('songs').select('*');
+            const targetSongs = songs.filter(s => parsePgArray(s.album_ids).includes(item.id));
 
-            if (maxStr < minStr) { 
-                alert("O valor máximo deve ser maior ou igual ao mínimo."); 
-                return; 
-            }
+            let totalAdicionadoNoLancamento = 0;
 
-            const confirmAction = confirm(`Sorteio: Deseja gerar entre ${minStr.toLocaleString('pt-BR')} e ${maxStr.toLocaleString('pt-BR')} streams para CADA faixa de "${item.title}"?`);
-            if(!confirmAction) return;
-
-            const btn = document.getElementById('btnRandomizeAlbum');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sorteando...';
-
-            try {
-                // 1. Ir buscar as músicas deste Lançamento
-                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('*');
-                if (songsErr) throw songsErr;
-
-                const targetSongs = songs.filter(song => {
-                    if (item.table === 'albums') return parsePgArray(song.album_ids).includes(item.id);
-                    if (item.table === 'singles') return parsePgArray(song.single_ids).includes(item.id);
-                    return false;
-                });
-
-                if (targetSongs.length === 0) {
-                    alert("Nenhuma música associada a este lançamento.");
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-magic"></i> Sortear Faixas e Atualizar';
-                    return;
+            for (let song of targetSongs) {
+                let sorteio = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // Aplica diminuição de 75% se a condição de Intro/Outro/Interlude for válida
+                if (aplicarReducao && verificarFaixaSecundaria(song)) {
+                    sorteio = Math.floor(sorteio * 0.25);
                 }
 
-                const songUpdates = [];
-                let totalAdded = 0;
-
-                // 2. Definir o valor para cada música e preparar batch
-                targetSongs.forEach(song => {
-                    const randomStreams = Math.floor(Math.random() * (maxStr - minStr + 1)) + minStr;
-                    songUpdates.push({
-                        id: song.id,
-                        streams: (song.streams || 0) + randomStreams,
-                        total_streams: (song.total_streams || 0) + randomStreams
-                    });
-                    totalAdded += randomStreams;
-                });
-
-                // 3. Atualizar Músicas no Supabase (em blocos de 50 para evitar limites)
-                const batchSize = 50;
-                for (let i = 0; i < songUpdates.length; i += batchSize) {
-                    const batch = songUpdates.slice(i, i + batchSize);
-                    const promises = batch.map(u => supabaseClient.from('songs').update({
-                        streams: u.streams,
-                        total_streams: u.total_streams
-                    }).eq('id', u.id));
-                    await Promise.all(promises);
-                }
-
-                // 4. Atualizar o Álbum / Single
-                const currentWeekly = item.streams || 0;
-                const newWeekly = currentWeekly + totalAdded;
-                await supabaseClient.from(item.table).update({ weekly_streams: newWeekly }).eq('id', item.id);
-
-                // 5. Atualizar Interface Visualmente
-                item.streams = newWeekly;
-                item.total_streams = (item.total_streams || 0) + totalAdded; // Atualiza o Total (só info visual cache)
-                document.getElementById('dbStreamsInput').value = newWeekly;
-
-                showToast(`Sorteio Concluído! ${totalAdded.toLocaleString('pt-BR')} streams somados no álbum divididos pelas ${targetSongs.length} faixas.`);
-            } catch (err) {
-                alert("Erro ao sortear: " + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-magic"></i> Sortear Faixas e Atualizar';
+                totalAdicionadoNoLancamento += sorteio;
+                await supabaseClient.from('songs').update({
+                    streams: (song.streams || 0) + sorteio,
+                    total_streams: (song.total_streams || 0) + sorteio
+                }).eq('id', song.id);
             }
+
+            const novoSemanal = (item.streams || 0) + totalAdicionadoNoLancamento;
+            await supabaseClient.from(item.table).update({ weekly_streams: novoSemanal }).eq('id', item.id);
+            document.getElementById('dbStreamsInput').value = novoSemanal;
+            showToast("Sorteio do Álbum finalizado!");
         });
 
         // ------------------------------------------------------------------
-        // ATUALIZA O TOTAL DA MÚSICA SELECIONADA MANUALMENTE
-        // ------------------------------------------------------------------
-        document.getElementById('btnAddTotalDb').addEventListener('click', async () => {
-            const selectRel = document.getElementById('updateReleaseSelect');
-            if (!selectRel.value) { alert('Selecione uma MÚSICA primeiro!'); return; }
-
-            const item = updateReleasesData[selectRel.value];
-            if (item.table !== 'songs') {
-                alert("Você deve selecionar uma MÚSICA ESPECÍFICA para somar no Total. Álbuns já somam automaticamente.");
-                return;
-            }
-
-            const addAmount = parseInt(document.getElementById('dbAddTotalInput').value);
-            const btn = document.getElementById('btnAddTotalDb');
-
-            if (isNaN(addAmount) || addAmount <= 0) { alert('Insira um número válido maior que zero!'); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Somando...';
-
-            const newTotal = (item.total_streams || 0) + addAmount;
-
-            const { error } = await supabaseClient.from(item.table).update({ total_streams: newTotal }).eq('id', item.id);
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar ao Total (Manual)';
-
-            if (error) { 
-                alert('Erro ao somar: ' + error.message); 
-            } else { 
-                showToast(`+${addAmount.toLocaleString('pt-BR')} adicionados ao histórico de "${item.title}"!`);
-                item.total_streams = newTotal;
-                document.getElementById('dbTotalStreamsInput').value = newTotal; 
-                document.getElementById('dbAddTotalInput').value = ''; 
-            }
-        });
-
-        // ------------------------------------------------------------------
-        // BOTÃO MÁGICO PARA DAR DE 1M A 5M APENAS PARA CATÁLOGO ANTIGO (< 2026)
+        // LÓGICA ATUALIZADA: SORTEIO DE CATÁLOGO ANTIGO COM FILTRO DE REDUÇÃO
         // ------------------------------------------------------------------
         document.getElementById('btnRandomCatalog').addEventListener('click', async () => {
-            const confirmAction = confirm("ATENÇÃO: Deseja adicionar entre 1M e 5M de streams ao TOTAL das músicas lançadas ANTES DE 2026? Esta ação não pode ser desfeita.");
-            if (!confirmAction) return;
+            const aplicarReducao = document.getElementById('chkReduceOldCatalog').checked;
+            
+            const { data: albums } = await supabaseClient.from('albums').select('id').lt('release_date', '2026-01-01');
+            const { data: singles } = await supabaseClient.from('singles').select('id').lt('release_date', '2026-01-01');
+            const oldIds = [...(albums || []).map(a => a.id), ...(singles || []).map(s => s.id)];
 
-            const btn = document.getElementById('btnRandomCatalog');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Catálogo Antigo...';
-
-            try {
-                const { data: oldAlbums } = await supabaseClient.from('albums')
-                    .select('id')
-                    .lt('release_date', '2026-01-01T00:00:00Z');
+            const { data: songs } = await supabaseClient.from('songs').select('*');
+            
+            for(let song of songs) {
+                const emLancamentoAntigo = parsePgArray(song.album_ids).some(id => oldIds.includes(id)) || parsePgArray(song.single_ids).some(id => oldIds.includes(id));
+                if (emLancamentoAntigo) {
+                    let sorteio = Math.floor(Math.random() * (5000000 - 1000000 + 1)) + 1000000;
                     
-                const { data: oldSingles } = await supabaseClient.from('singles')
-                    .select('id')
-                    .lt('release_date', '2026-01-01T00:00:00Z');
-
-                const oldAlbumIds = (oldAlbums || []).map(a => a.id);
-                const oldSingleIds = (oldSingles || []).map(s => s.id);
-
-                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, total_streams, album_ids, single_ids');
-                if (songsErr) throw songsErr;
-
-                const songUpdates = [];
-                
-                songs.forEach(song => {
-                    const aIds = parsePgArray(song.album_ids);
-                    const sIds = parsePgArray(song.single_ids);
-                    
-                    const isOld = aIds.some(id => oldAlbumIds.includes(id)) || sIds.some(id => oldSingleIds.includes(id));
-
-                    if (isOld) {
-                        const randomStreams = Math.floor(Math.random() * (5000000 - 1000000 + 1)) + 1000000;
-                        songUpdates.push({
-                            id: song.id,
-                            total_streams: (song.total_streams || 0) + randomStreams
-                        });
+                    if (aplicarReducao && verificarFaixaSecundaria(song)) {
+                        sorteio = Math.floor(sorteio * 0.25);
                     }
-                });
 
-                if (songUpdates.length === 0) {
-                    alert("Nenhuma música antiga (antes de 2026) foi encontrada no sistema.");
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)';
-                    return;
+                    await supabaseClient.from('songs').update({ total_streams: (song.total_streams || 0) + sorteio }).eq('id', song.id);
                 }
-
-                const batchSize = 50;
-                for (let i = 0; i < songUpdates.length; i += batchSize) {
-                    const batch = songUpdates.slice(i, i + batchSize);
-                    const promises = batch.map(u => supabaseClient.from('songs').update({
-                        total_streams: u.total_streams
-                    }).eq('id', u.id));
-                    await Promise.all(promises);
-                }
-
-                showToast(`Sucesso! ${songUpdates.length} músicas antigas receberam streams aleatórios.`);
-                
-                document.getElementById('updateReleaseSelect').innerHTML = '<option value="">Selecione um artista primeiro...</option>';
-                document.getElementById('updateReleaseSelect').disabled = true;
-                document.getElementById('dbStreamsInput').value = '';
-                document.getElementById('dbTotalStreamsInput').value = '';
-
-            } catch (err) {
-                alert("Erro ao distribuir streams: " + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)';
             }
+            showToast("Catálogo antigo atualizado!");
         });
 
-        // ------------------------------------------------------------------
-        // ENCERRAR O DIA (Salvar na Planilha e Repor a 0 as contagens diárias/semanais)
-        // ------------------------------------------------------------------
+        // REPOSIÇÃO DE DATAS E DIAS GLOBAL
         document.getElementById('btnCloseDay').addEventListener('click', async () => {
-            const confirmAction = confirm("ATENÇÃO: Deseja encerrar o dia? Isto irá primeiro guardar o Top 50 na Planilha Oficial e depois repor a zero as contagens diárias para a próxima rodada.");
-            if (!confirmAction) return;
-
-            const btn = document.getElementById('btnCloseDay');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar Chart e processar catálogo...';
-
-            try {
-                await salvarChartNoSheets();
-
-                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, streams');
-                if (songsErr) throw songsErr;
-
-                const songUpdates = [];
-                songs.forEach(song => {
-                    if ((song.streams || 0) > 0) {
-                        songUpdates.push({
-                            id: song.id,
-                            streams: 0 
-                        });
-                    }
-                });
-
-                const batchSize = 50;
-                for (let i = 0; i < songUpdates.length; i += batchSize) {
-                    const batch = songUpdates.slice(i, i + batchSize);
-                    const promises = batch.map(u => supabaseClient.from('songs').update({
-                        streams: u.streams
-                    }).eq('id', u.id));
-                    await Promise.all(promises);
-                }
-
-                const resetReleases = async (tableName) => {
-                    const { data: releases } = await supabaseClient.from(tableName).select('id, weekly_streams');
-                    if (releases) {
-                        const relUpdates = [];
-                        releases.forEach(r => {
-                            if ((r.weekly_streams || 0) > 0) {
-                                relUpdates.push({
-                                    id: r.id,
-                                    weekly_streams: 0
-                                });
-                            }
-                        });
-
-                        for (let i = 0; i < relUpdates.length; i += batchSize) {
-                            const batch = relUpdates.slice(i, i + batchSize);
-                            const promises = batch.map(u => supabaseClient.from(tableName).update({ 
-                                weekly_streams: u.weekly_streams 
-                            }).eq('id', u.id));
-                            await Promise.all(promises);
-                        }
-                    }
-                };
-                await resetReleases('albums');
-                await resetReleases('singles');
-
-                showToast("Dia encerrado com sucesso! O Top de Charts foi guardado e os streams repostos.");
-            } catch (err) {
-                alert("Erro ao encerrar o dia: " + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-calendar-check"></i> Encerrar Dia (Repor a Zero)';
-            }
+            await salvarChartNoSheets();
+            const { data: songs } = await supabaseClient.from('songs').select('id');
+            for(let s of songs) await supabaseClient.from('songs').update({ streams: 0 }).eq('id', s.id);
+            showToast("Dia encerrado e diários limpos!");
         });
 
-        // ------------------------------------------------------------------
-        // RESET SEMANAL (ZERAR AÇÕES RPG E BÓNUS DOS ARTISTAS)
-        // ------------------------------------------------------------------
         document.getElementById('btnResetWeek').addEventListener('click', async () => {
-            const confirmAction = confirm("ATENÇÃO: Desejas fazer o Reset Semanal do RPG? Isto irá zerar os limites de TODAS as ações de batalha e remover os bónus de TODOS os artistas.");
-            if (!confirmAction) return;
-
-            const btn = document.getElementById('btnResetWeek');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar Reset...';
-
-            try {
-                const { error: rpcError } = await supabaseClient.rpc('reset_semanal');
-
-                if (rpcError) {
-                    console.log("Função SQL não encontrada ou falhou. A utilizar o método JavaScript como alternativa...");
-                    const { error: jsError } = await supabaseClient
-                        .from('artists')
-                        .update({
-                            promo_tv_count: 0, promo_radio_count: 0, promo_commercial_count: 0, promo_internet_count: 0,
-                            remix_count: 0, mv_count: 0, capas_count: 0, parceria_count: 0,
-                            promo_tv_bonus_claimed: false, promo_radio_bonus_claimed: false, promo_commercial_bonus_claimed: false,
-                            promo_internet_bonus_claimed: false, remix_bonus_claimed: false, mv_bonus_claimed: false,
-                            capas_bonus_claimed: false, parceria_bonus_claimed: false
-                        })
-                        .not('id', 'is', null);
-                    if (jsError) throw jsError;
-                }
-                
-                showToast("Reset Semanal concluído! As ações RPG estão prontas para a nova semana.");
-            } catch (err) {
-                alert("Erro ao fazer o reset: " + err.message);
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-power-off"></i> Fazer Reset da Semana';
-            }
+            await supabaseClient.from('artists').update({ promo_tv_count: 0, promo_radio_count: 0, mv_count: 0 });
+            showToast("Semana resetada!");
         });
 
-        // INICIALIZAÇÃO
-        loadAdminCache().then(() => loadDashboardData());
-
+        window.onload = () => loadDashboardData();
     </script>
 </body>
 </html>
