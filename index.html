@@ -310,6 +310,24 @@
 
                 <button class="btn-primary" id="btnSaveDb"><i class="fas fa-save"></i> Substituir Valores Atuais</button>
 
+                <div id="bulkRandomContainer" style="display: none; margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
+                    <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-dice"></i> Sorteio de Streams nas Faixas</h3>
+                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Sorteia um valor aleatório para <strong>cada música</strong> deste álbum/single e soma automaticamente ao Diário e ao Total.</p>
+
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Mínimo</label>
+                            <input type="number" id="dbMinRandomInput" value="0">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Máximo</label>
+                            <input type="number" id="dbMaxRandomInput" value="5000000">
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="btnRandomizeAlbum" style="background: linear-gradient(45deg, #1DB954, #121212); border: 1px solid #1DB954; color: white;">
+                        <i class="fas fa-magic"></i> Sortear Faixas e Atualizar
+                    </button>
+                </div>
                 <div style="margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
                     <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-history"></i> Streams de Catálogo Antigo</h3>
                     <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Soma diretamente no "Total" da música sem enviar para os Charts Diários.</p>
@@ -842,6 +860,10 @@
             
             selectRel.innerHTML = '<option value="">A carregar catálogo...</option>';
             selectRel.disabled = true;
+            
+            // Esconde o painel de sorteio ao trocar de artista
+            const bulkContainer = document.getElementById('bulkRandomContainer');
+            if(bulkContainer) bulkContainer.style.display = 'none';
 
             try {
                 const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
@@ -904,18 +926,28 @@
                 document.getElementById('dbStreamsInput').value = item.streams || 0;
                 document.getElementById('dbTotalStreamsInput').value = item.total_streams || 0;
                 
+                const bulkContainer = document.getElementById('bulkRandomContainer');
+
                 // Se for álbum ou single, não permite editar o TOTAL aqui (porque o total deles é a soma das músicas).
                 if (item.table !== 'songs') {
                     document.getElementById('dbTotalStreamsInput').disabled = true;
                     document.getElementById('dbAddTotalInput').disabled = true;
                     document.getElementById('btnAddTotalDb').disabled = true;
                     document.getElementById('btnAddTotalDb').title = "Para editar o Total, atualize as músicas individuais do álbum.";
+
+                    // Mostrar bloco de Sorteio
+                    if(bulkContainer) bulkContainer.style.display = 'block';
+
                     showToast("Dados carregados. (Total do Álbum é calculado pelas músicas)");
                 } else {
                     document.getElementById('dbTotalStreamsInput').disabled = false;
                     document.getElementById('dbAddTotalInput').disabled = false;
                     document.getElementById('btnAddTotalDb').disabled = false;
                     document.getElementById('btnAddTotalDb').title = "";
+
+                    // Esconder bloco de Sorteio
+                    if(bulkContainer) bulkContainer.style.display = 'none';
+
                     showToast("Dados de streams da música carregados com sucesso!");
                 }
             }
@@ -927,7 +959,7 @@
 
             const item = updateReleasesData[selectRel.value];
             const streams = parseInt(document.getElementById('dbStreamsInput').value);
-            const totalStreams = parseInt(document.getElementById('dbTotalStreamsInput').value); // Pode estar undefined para álbuns (porque está disabled)
+            const totalStreams = parseInt(document.getElementById('dbTotalStreamsInput').value); 
             const btn = document.getElementById('btnSaveDb');
 
             if (isNaN(streams)) { alert('Insira números válidos nos Streams Diários/Semanais!'); return; }
@@ -936,7 +968,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
             let updatePayload = {};
-            // IMPORTANTE: Removemos o envio do "total_streams" caso seja um álbum ou single
             if (item.table === 'songs') {
                 if (isNaN(totalStreams)) { alert('Insira número válido no Total!'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Substituir Valores Atuais'; return; }
                 updatePayload = { streams: streams, total_streams: totalStreams };
@@ -955,6 +986,92 @@
                 showToast(`Streams diários de "${item.title}" atualizados com sucesso!`);
                 item.streams = streams;
                 if(item.table === 'songs') item.total_streams = totalStreams;
+            }
+        });
+
+        // ------------------------------------------------------------------
+        // NOVO: SORTEIO EM MASSA NAS FAIXAS DE UM ÁLBUM/SINGLE
+        // ------------------------------------------------------------------
+        document.getElementById('btnRandomizeAlbum').addEventListener('click', async () => {
+            const selectRel = document.getElementById('updateReleaseSelect');
+            if (!selectRel.value) return;
+            const item = updateReleasesData[selectRel.value];
+
+            const minStr = parseInt(document.getElementById('dbMinRandomInput').value) || 0;
+            const maxStr = parseInt(document.getElementById('dbMaxRandomInput').value) || 0;
+
+            if (maxStr < minStr) { 
+                alert("O valor máximo deve ser maior ou igual ao mínimo."); 
+                return; 
+            }
+
+            const confirmAction = confirm(`Sorteio: Deseja gerar entre ${minStr.toLocaleString('pt-BR')} e ${maxStr.toLocaleString('pt-BR')} streams para CADA faixa de "${item.title}"?`);
+            if(!confirmAction) return;
+
+            const btn = document.getElementById('btnRandomizeAlbum');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sorteando...';
+
+            try {
+                // 1. Ir buscar as músicas deste Lançamento
+                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('*');
+                if (songsErr) throw songsErr;
+
+                const targetSongs = songs.filter(song => {
+                    if (item.table === 'albums') return parsePgArray(song.album_ids).includes(item.id);
+                    if (item.table === 'singles') return parsePgArray(song.single_ids).includes(item.id);
+                    return false;
+                });
+
+                if (targetSongs.length === 0) {
+                    alert("Nenhuma música associada a este lançamento.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-magic"></i> Sortear Faixas e Atualizar';
+                    return;
+                }
+
+                const songUpdates = [];
+                let totalAdded = 0;
+
+                // 2. Definir o valor para cada música e preparar batch
+                targetSongs.forEach(song => {
+                    const randomStreams = Math.floor(Math.random() * (maxStr - minStr + 1)) + minStr;
+                    songUpdates.push({
+                        id: song.id,
+                        streams: (song.streams || 0) + randomStreams,
+                        total_streams: (song.total_streams || 0) + randomStreams
+                    });
+                    totalAdded += randomStreams;
+                });
+
+                // 3. Atualizar Músicas no Supabase (em blocos de 50 para evitar limites)
+                const batchSize = 50;
+                for (let i = 0; i < songUpdates.length; i += batchSize) {
+                    const batch = songUpdates.slice(i, i + batchSize);
+                    const promises = batch.map(u => supabaseClient.from('songs').update({
+                        streams: u.streams,
+                        total_streams: u.total_streams
+                    }).eq('id', u.id));
+                    await Promise.all(promises);
+                }
+
+                // 4. Atualizar o Álbum / Single
+                const currentWeekly = item.streams || 0;
+                const newWeekly = currentWeekly + totalAdded;
+                await supabaseClient.from(item.table).update({ weekly_streams: newWeekly }).eq('id', item.id);
+
+                // 5. Atualizar Interface Visualmente
+                item.streams = newWeekly;
+                item.total_streams = (item.total_streams || 0) + totalAdded; // Atualiza o Total (só info visual cache)
+                document.getElementById('dbStreamsInput').value = newWeekly;
+
+                showToast(`Sorteio Concluído! ${totalAdded.toLocaleString('pt-BR')} streams somados no álbum divididos pelas ${targetSongs.length} faixas.`);
+            } catch (err) {
+                alert("Erro ao sortear: " + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i> Sortear Faixas e Atualizar';
             }
         });
 
@@ -981,7 +1098,6 @@
 
             const newTotal = (item.total_streams || 0) + addAmount;
 
-            // Atualiza APENAS o total_streams da Música, mantendo o streams diário intacto
             const { error } = await supabaseClient.from(item.table).update({ total_streams: newTotal }).eq('id', item.id);
 
             btn.disabled = false;
@@ -992,13 +1108,13 @@
             } else { 
                 showToast(`+${addAmount.toLocaleString('pt-BR')} adicionados ao histórico de "${item.title}"!`);
                 item.total_streams = newTotal;
-                document.getElementById('dbTotalStreamsInput').value = newTotal; // Atualiza visualmente
-                document.getElementById('dbAddTotalInput').value = ''; // Limpa o campo
+                document.getElementById('dbTotalStreamsInput').value = newTotal; 
+                document.getElementById('dbAddTotalInput').value = ''; 
             }
         });
 
         // ------------------------------------------------------------------
-        // NOVO: BOTÃO MÁGICO PARA DAR DE 1M A 5M APENAS PARA CATÁLOGO ANTIGO (< 2026)
+        // BOTÃO MÁGICO PARA DAR DE 1M A 5M APENAS PARA CATÁLOGO ANTIGO (< 2026)
         // ------------------------------------------------------------------
         document.getElementById('btnRandomCatalog').addEventListener('click', async () => {
             const confirmAction = confirm("ATENÇÃO: Deseja adicionar entre 1M e 5M de streams ao TOTAL das músicas lançadas ANTES DE 2026? Esta ação não pode ser desfeita.");
@@ -1009,7 +1125,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Catálogo Antigo...';
 
             try {
-                // 1. Procurar todos os Álbuns e Singles que foram lançados antes de 2026-01-01
                 const { data: oldAlbums } = await supabaseClient.from('albums')
                     .select('id')
                     .lt('release_date', '2026-01-01T00:00:00Z');
@@ -1021,7 +1136,6 @@
                 const oldAlbumIds = (oldAlbums || []).map(a => a.id);
                 const oldSingleIds = (oldSingles || []).map(s => s.id);
 
-                // 2. Procurar todas as músicas e filtrar as que pertencem aos álbuns/singles antigos
                 const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, total_streams, album_ids, single_ids');
                 if (songsErr) throw songsErr;
 
@@ -1031,11 +1145,9 @@
                     const aIds = parsePgArray(song.album_ids);
                     const sIds = parsePgArray(song.single_ids);
                     
-                    // Verifica se a música está em algum dos álbuns ou singles antigos
                     const isOld = aIds.some(id => oldAlbumIds.includes(id)) || sIds.some(id => oldSingleIds.includes(id));
 
                     if (isOld) {
-                        // Sorteio aleatório entre 1.000.000 e 5.000.000
                         const randomStreams = Math.floor(Math.random() * (5000000 - 1000000 + 1)) + 1000000;
                         songUpdates.push({
                             id: song.id,
@@ -1051,7 +1163,6 @@
                     return;
                 }
 
-                // 3. Atualizar as Músicas qualificadas em Lotes de 50 no Supabase
                 const batchSize = 50;
                 for (let i = 0; i < songUpdates.length; i += batchSize) {
                     const batch = songUpdates.slice(i, i + batchSize);
@@ -1063,7 +1174,6 @@
 
                 showToast(`Sucesso! ${songUpdates.length} músicas antigas receberam streams aleatórios.`);
                 
-                // Reseta a área de seleção de edição de charts
                 document.getElementById('updateReleaseSelect').innerHTML = '<option value="">Selecione um artista primeiro...</option>';
                 document.getElementById('updateReleaseSelect').disabled = true;
                 document.getElementById('dbStreamsInput').value = '';
@@ -1090,10 +1200,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar Chart e processar catálogo...';
 
             try {
-                // 🔥 NOVO: Envia as posições atuais para a Planilha ANTES de repor a zero!
                 await salvarChartNoSheets();
 
-                // 1. Procurar todas as músicas
                 const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, streams');
                 if (songsErr) throw songsErr;
 
@@ -1102,12 +1210,11 @@
                     if ((song.streams || 0) > 0) {
                         songUpdates.push({
                             id: song.id,
-                            streams: 0 // Apenas repõe o diário a zero
+                            streams: 0 
                         });
                     }
                 });
 
-                // Atualizar Músicas em Lotes
                 const batchSize = 50;
                 for (let i = 0; i < songUpdates.length; i += batchSize) {
                     const batch = songUpdates.slice(i, i + batchSize);
@@ -1117,7 +1224,6 @@
                     await Promise.all(promises);
                 }
 
-                // 2. Repor streams diários/semanais de álbuns e singles
                 const resetReleases = async (tableName) => {
                     const { data: releases } = await supabaseClient.from(tableName).select('id, weekly_streams');
                     if (releases) {
