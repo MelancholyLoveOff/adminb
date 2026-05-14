@@ -80,7 +80,7 @@
             color: var(--text-base); padding: 14px; border-radius: 4px; font-size: 14px; transition: 0.2s;
         }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--text-subdued); background-color: #333; }
-        .form-group select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .form-group select:disabled, .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-primary {
             background-color: var(--spotify-green); color: black; border: none; padding: 16px 32px;
@@ -312,15 +312,20 @@
 
                 <div style="margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
                     <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-history"></i> Streams de Catálogo Antigo</h3>
-                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Soma diretamente no "Total" da música/álbum sem enviar para os Charts Diários/Semanais.</p>
+                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Soma diretamente no "Total" da música sem enviar para os Charts Diários.</p>
                     
                     <div class="form-group">
-                        <label>Quantidade para Somar</label>
+                        <label>Quantidade para Somar (Apenas Músicas)</label>
                         <input type="number" id="dbAddTotalInput" placeholder="Ex: 500000">
                     </div>
-                    <button class="btn-primary" id="btnAddTotalDb" style="background: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green);">
-                        <i class="fas fa-plus"></i> Adicionar ao Total
+                    <button class="btn-primary" id="btnAddTotalDb" style="background: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green); margin-bottom: 16px;">
+                        <i class="fas fa-plus"></i> Adicionar ao Total (Manual)
                     </button>
+
+                    <button class="btn-primary" id="btnRandomCatalog" style="background: linear-gradient(45deg, #1DB954, #121212); color: white; border: 1px solid #1DB954;">
+                        <i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)
+                    </button>
+
                 </div>
             </div>
 
@@ -898,7 +903,21 @@
             if(item) {
                 document.getElementById('dbStreamsInput').value = item.streams || 0;
                 document.getElementById('dbTotalStreamsInput').value = item.total_streams || 0;
-                showToast("Dados de streams carregados com sucesso!");
+                
+                // Se for álbum ou single, não permite editar o TOTAL aqui (porque o total deles é a soma das músicas).
+                if (item.table !== 'songs') {
+                    document.getElementById('dbTotalStreamsInput').disabled = true;
+                    document.getElementById('dbAddTotalInput').disabled = true;
+                    document.getElementById('btnAddTotalDb').disabled = true;
+                    document.getElementById('btnAddTotalDb').title = "Para editar o Total, atualize as músicas individuais do álbum.";
+                    showToast("Dados carregados. (Total do Álbum é calculado pelas músicas)");
+                } else {
+                    document.getElementById('dbTotalStreamsInput').disabled = false;
+                    document.getElementById('dbAddTotalInput').disabled = false;
+                    document.getElementById('btnAddTotalDb').disabled = false;
+                    document.getElementById('btnAddTotalDb').title = "";
+                    showToast("Dados de streams da música carregados com sucesso!");
+                }
             }
         });
 
@@ -908,19 +927,21 @@
 
             const item = updateReleasesData[selectRel.value];
             const streams = parseInt(document.getElementById('dbStreamsInput').value);
-            const totalStreams = parseInt(document.getElementById('dbTotalStreamsInput').value);
+            const totalStreams = parseInt(document.getElementById('dbTotalStreamsInput').value); // Pode estar undefined para álbuns (porque está disabled)
             const btn = document.getElementById('btnSaveDb');
 
-            if (isNaN(streams) || isNaN(totalStreams)) { alert('Insira números válidos!'); return; }
+            if (isNaN(streams)) { alert('Insira números válidos nos Streams Diários/Semanais!'); return; }
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
             let updatePayload = {};
+            // IMPORTANTE: Removemos o envio do "total_streams" caso seja um álbum ou single
             if (item.table === 'songs') {
+                if (isNaN(totalStreams)) { alert('Insira número válido no Total!'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Substituir Valores Atuais'; return; }
                 updatePayload = { streams: streams, total_streams: totalStreams };
             } else {
-                updatePayload = { weekly_streams: streams, total_streams: totalStreams };
+                updatePayload = { weekly_streams: streams };
             }
 
             const { error } = await supabaseClient.from(item.table).update(updatePayload).eq('id', item.id);
@@ -931,20 +952,25 @@
             if (error) { 
                 alert('Erro ao salvar: ' + error.message); 
             } else { 
-                showToast(`Streams de "${item.title}" atualizados com sucesso no Chart!`);
+                showToast(`Streams diários de "${item.title}" atualizados com sucesso!`);
                 item.streams = streams;
-                item.total_streams = totalStreams;
+                if(item.table === 'songs') item.total_streams = totalStreams;
             }
         });
 
         // ------------------------------------------------------------------
-        // NOVO: ADICIONAR STREAMS APENAS NO TOTAL GLOBAL (CATÁLOGO ANTIGO)
+        // ATUALIZA O TOTAL DA MÚSICA SELECIONADA MANUALMENTE
         // ------------------------------------------------------------------
         document.getElementById('btnAddTotalDb').addEventListener('click', async () => {
             const selectRel = document.getElementById('updateReleaseSelect');
-            if (!selectRel.value) { alert('Selecione uma música ou álbum primeiro!'); return; }
+            if (!selectRel.value) { alert('Selecione uma MÚSICA primeiro!'); return; }
 
             const item = updateReleasesData[selectRel.value];
+            if (item.table !== 'songs') {
+                alert("Você deve selecionar uma MÚSICA ESPECÍFICA para somar no Total. Álbuns já somam automaticamente.");
+                return;
+            }
+
             const addAmount = parseInt(document.getElementById('dbAddTotalInput').value);
             const btn = document.getElementById('btnAddTotalDb');
 
@@ -955,19 +981,100 @@
 
             const newTotal = (item.total_streams || 0) + addAmount;
 
-            // Atualiza APENAS o total_streams, mantendo o streams diário intacto
+            // Atualiza APENAS o total_streams da Música, mantendo o streams diário intacto
             const { error } = await supabaseClient.from(item.table).update({ total_streams: newTotal }).eq('id', item.id);
 
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar ao Total';
+            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar ao Total (Manual)';
 
             if (error) { 
                 alert('Erro ao somar: ' + error.message); 
             } else { 
                 showToast(`+${addAmount.toLocaleString('pt-BR')} adicionados ao histórico de "${item.title}"!`);
                 item.total_streams = newTotal;
-                document.getElementById('dbTotalStreamsInput').value = newTotal; // Atualiza o visual
+                document.getElementById('dbTotalStreamsInput').value = newTotal; // Atualiza visualmente
                 document.getElementById('dbAddTotalInput').value = ''; // Limpa o campo
+            }
+        });
+
+        // ------------------------------------------------------------------
+        // NOVO: BOTÃO MÁGICO PARA DAR DE 1M A 5M APENAS PARA CATÁLOGO ANTIGO (< 2026)
+        // ------------------------------------------------------------------
+        document.getElementById('btnRandomCatalog').addEventListener('click', async () => {
+            const confirmAction = confirm("ATENÇÃO: Deseja adicionar entre 1M e 5M de streams ao TOTAL das músicas lançadas ANTES DE 2026? Esta ação não pode ser desfeita.");
+            if (!confirmAction) return;
+
+            const btn = document.getElementById('btnRandomCatalog');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Catálogo Antigo...';
+
+            try {
+                // 1. Procurar todos os Álbuns e Singles que foram lançados antes de 2026-01-01
+                const { data: oldAlbums } = await supabaseClient.from('albums')
+                    .select('id')
+                    .lt('release_date', '2026-01-01T00:00:00Z');
+                    
+                const { data: oldSingles } = await supabaseClient.from('singles')
+                    .select('id')
+                    .lt('release_date', '2026-01-01T00:00:00Z');
+
+                const oldAlbumIds = (oldAlbums || []).map(a => a.id);
+                const oldSingleIds = (oldSingles || []).map(s => s.id);
+
+                // 2. Procurar todas as músicas e filtrar as que pertencem aos álbuns/singles antigos
+                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, total_streams, album_ids, single_ids');
+                if (songsErr) throw songsErr;
+
+                const songUpdates = [];
+                
+                songs.forEach(song => {
+                    const aIds = parsePgArray(song.album_ids);
+                    const sIds = parsePgArray(song.single_ids);
+                    
+                    // Verifica se a música está em algum dos álbuns ou singles antigos
+                    const isOld = aIds.some(id => oldAlbumIds.includes(id)) || sIds.some(id => oldSingleIds.includes(id));
+
+                    if (isOld) {
+                        // Sorteio aleatório entre 1.000.000 e 5.000.000
+                        const randomStreams = Math.floor(Math.random() * (5000000 - 1000000 + 1)) + 1000000;
+                        songUpdates.push({
+                            id: song.id,
+                            total_streams: (song.total_streams || 0) + randomStreams
+                        });
+                    }
+                });
+
+                if (songUpdates.length === 0) {
+                    alert("Nenhuma música antiga (antes de 2026) foi encontrada no sistema.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)';
+                    return;
+                }
+
+                // 3. Atualizar as Músicas qualificadas em Lotes de 50 no Supabase
+                const batchSize = 50;
+                for (let i = 0; i < songUpdates.length; i += batchSize) {
+                    const batch = songUpdates.slice(i, i + batchSize);
+                    const promises = batch.map(u => supabaseClient.from('songs').update({
+                        total_streams: u.total_streams
+                    }).eq('id', u.id));
+                    await Promise.all(promises);
+                }
+
+                showToast(`Sucesso! ${songUpdates.length} músicas antigas receberam streams aleatórios.`);
+                
+                // Reseta a área de seleção de edição de charts
+                document.getElementById('updateReleaseSelect').innerHTML = '<option value="">Selecione um artista primeiro...</option>';
+                document.getElementById('updateReleaseSelect').disabled = true;
+                document.getElementById('dbStreamsInput').value = '';
+                document.getElementById('dbTotalStreamsInput').value = '';
+
+            } catch (err) {
+                alert("Erro ao distribuir streams: " + err.message);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-dice"></i> Dar 1M a 5M p/ Catálogo Antigo (&lt; 2026)';
             }
         });
 
