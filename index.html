@@ -314,10 +314,10 @@
             <div class="control-panel" style="max-width: 600px; margin-top: 24px; border: 1px solid var(--spotify-green); background: rgba(29, 185, 84, 0.05);">
                 <h3 style="margin-bottom: 12px; color: var(--spotify-green); font-size: 16px;"><i class="fas fa-globe"></i> Ações Globais</h3>
                 <p style="font-size: 13px; color: var(--text-subdued); margin-bottom: 16px; line-height: 1.5;">
-                    Utilize este botão para <strong>Encerrar o Dia</strong>. O sistema irá varrer toda a base de dados, somar os streams diários aos streams totais de <strong>todas as músicas</strong> e, em seguida, repor as contagens diárias a zero para a próxima rodada. Isto atualizará o Top Oficial de imediato.
+                    Utilize este botão para <strong>Encerrar o Dia</strong>. O sistema irá varrer toda a base de dados e <strong>repor as contagens diárias/semanais a zero</strong> para a próxima rodada. Isto atualizará o Top Oficial de imediato após guardar o histórico.
                 </p>
                 <button class="btn-primary" id="btnCloseDay" style="background-color: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green);">
-                    <i class="fas fa-calendar-check"></i> Encerrar Dia (Somar e Repor a Zero)
+                    <i class="fas fa-calendar-check"></i> Encerrar Dia (Repor a Zero)
                 </button>
             </div>
 
@@ -899,10 +899,10 @@
         });
 
         // ------------------------------------------------------------------
-        // ENCERRAR O DIA (Salvar na Planilha, Somar streams diários e repor a 0)
+        // ENCERRAR O DIA (Salvar na Planilha e Repor a 0 as contagens diárias/semanais)
         // ------------------------------------------------------------------
         document.getElementById('btnCloseDay').addEventListener('click', async () => {
-            const confirmAction = confirm("ATENÇÃO: Deseja encerrar o dia? Isto irá primeiro guardar o Top 50 na Planilha Oficial, depois somar os streams diários aos totais e repor a zero para a próxima rodada.");
+            const confirmAction = confirm("ATENÇÃO: Deseja encerrar o dia? Isto irá primeiro guardar o Top 50 na Planilha Oficial e depois repor a zero as contagens diárias para a próxima rodada.");
             if (!confirmAction) return;
 
             const btn = document.getElementById('btnCloseDay');
@@ -914,7 +914,7 @@
                 await salvarChartNoSheets();
 
                 // 1. Procurar todas as músicas
-                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, streams, total_streams');
+                const { data: songs, error: songsErr } = await supabaseClient.from('songs').select('id, streams');
                 if (songsErr) throw songsErr;
 
                 const songUpdates = [];
@@ -922,8 +922,7 @@
                     if ((song.streams || 0) > 0) {
                         songUpdates.push({
                             id: song.id,
-                            total_streams: (song.total_streams || 0) + (song.streams || 0),
-                            streams: 0 // Repõe o diário a zero
+                            streams: 0 // Apenas repõe o diário a zero
                         });
                     }
                 });
@@ -933,7 +932,6 @@
                 for (let i = 0; i < songUpdates.length; i += batchSize) {
                     const batch = songUpdates.slice(i, i + batchSize);
                     const promises = batch.map(u => supabaseClient.from('songs').update({
-                        total_streams: u.total_streams,
                         streams: u.streams
                     }).eq('id', u.id));
                     await Promise.all(promises);
@@ -941,14 +939,13 @@
 
                 // 2. Repor streams diários/semanais de álbuns e singles
                 const resetReleases = async (tableName) => {
-                    const { data: releases } = await supabaseClient.from(tableName).select('id, weekly_streams, total_streams');
+                    const { data: releases } = await supabaseClient.from(tableName).select('id, weekly_streams');
                     if (releases) {
                         const relUpdates = [];
                         releases.forEach(r => {
                             if ((r.weekly_streams || 0) > 0) {
                                 relUpdates.push({
                                     id: r.id,
-                                    total_streams: (r.total_streams || 0) + (r.weekly_streams || 0),
                                     weekly_streams: 0
                                 });
                             }
@@ -957,7 +954,6 @@
                         for (let i = 0; i < relUpdates.length; i += batchSize) {
                             const batch = relUpdates.slice(i, i + batchSize);
                             const promises = batch.map(u => supabaseClient.from(tableName).update({ 
-                                total_streams: u.total_streams,
                                 weekly_streams: u.weekly_streams 
                             }).eq('id', u.id));
                             await Promise.all(promises);
@@ -973,7 +969,7 @@
                 console.error(err);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-calendar-check"></i> Encerrar Dia (Somar e Repor a Zero)';
+                btn.innerHTML = '<i class="fas fa-calendar-check"></i> Encerrar Dia (Repor a Zero)';
             }
         });
 
