@@ -308,7 +308,20 @@
                     <input type="number" id="dbTotalStreamsInput" placeholder="Ex: 1500000">
                 </div>
 
-                <button class="btn-primary" id="btnSaveDb"><i class="fas fa-save"></i> Salvar na Base de Dados</button>
+                <button class="btn-primary" id="btnSaveDb"><i class="fas fa-save"></i> Substituir Valores Atuais</button>
+
+                <div style="margin-top: 32px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 24px;">
+                    <h3 style="margin-bottom: 8px; color: var(--spotify-green); font-size: 14px;"><i class="fas fa-history"></i> Streams de Catálogo Antigo</h3>
+                    <p style="font-size: 12px; color: var(--text-subdued); margin-bottom: 16px;">Soma diretamente no "Total" da música/álbum sem enviar para os Charts Diários/Semanais.</p>
+                    
+                    <div class="form-group">
+                        <label>Quantidade para Somar</label>
+                        <input type="number" id="dbAddTotalInput" placeholder="Ex: 500000">
+                    </div>
+                    <button class="btn-primary" id="btnAddTotalDb" style="background: transparent; border: 2px solid var(--spotify-green); color: var(--spotify-green);">
+                        <i class="fas fa-plus"></i> Adicionar ao Total
+                    </button>
+                </div>
             </div>
 
             <div class="control-panel" style="max-width: 600px; margin-top: 24px; border: 1px solid var(--spotify-green); background: rgba(29, 185, 84, 0.05);">
@@ -447,7 +460,7 @@
         document.getElementById('closeSidebarBtn').addEventListener('click', toggleMobileMenu);
         sidebarOverlay.addEventListener('click', toggleMobileMenu);
 
-      function showToast(message) {
+        function showToast(message) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -740,19 +753,33 @@
             selectRel.disabled = true;
 
             try {
+                // Puxamos todas as músicas para fazer a soma dinâmica (estilo Spotify)
                 const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
+                const allSongs = allSongsReq.data || [];
                 posterReleasesData = [];
 
                 if(adminCache.albums) {
                     const albums = adminCache.albums.filter(a => a.artist_id === artistId);
-                    albums.forEach(a => posterReleasesData.push({ type: 'Álbum', title: a.title, cover: a.image_url, streams: a.total_streams || a.weekly_streams || 0, artist: artistName }));
+                    albums.forEach(a => {
+                        // SOMA SPOTIFY: Filtra as músicas do álbum e soma os streams delas
+                        const albumSongs = allSongs.filter(song => parsePgArray(song.album_ids).includes(a.id));
+                        const sumStreams = albumSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
+                        
+                        posterReleasesData.push({ type: 'Álbum', title: a.title, cover: a.image_url, streams: sumStreams, artist: artistName });
+                    });
                 }
                 if(adminCache.singles) {
                     const singles = adminCache.singles.filter(s => s.artist_id === artistId);
-                    singles.forEach(s => posterReleasesData.push({ type: 'Single', title: s.title, cover: s.image_url, streams: s.total_streams || s.weekly_streams || 0, artist: artistName }));
+                    singles.forEach(s => {
+                        // SOMA SPOTIFY: Filtra as músicas do single e soma os streams delas
+                        const singleSongs = allSongs.filter(song => parsePgArray(song.single_ids).includes(s.id));
+                        const sumStreams = singleSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
+                        
+                        posterReleasesData.push({ type: 'Single', title: s.title, cover: s.image_url, streams: sumStreams, artist: artistName });
+                    });
                 }
                 
-                const artistSongs = (allSongsReq.data || []).filter(song => parsePgArray(song.artist_ids).includes(artistId));
+                const artistSongs = allSongs.filter(song => parsePgArray(song.artist_ids).includes(artistId));
                 artistSongs.forEach(song => {
                     let cover = "https://i.imgur.com/AD3MbBi.png";
                     const albumIds = parsePgArray(song.album_ids);
@@ -765,7 +792,8 @@
                         const sgl = adminCache.singles.find(s => s.id === singleIds[0]);
                         if(sgl && sgl.image_url) cover = sgl.image_url;
                     }
-                    posterReleasesData.push({ type: 'Música', title: song.title, cover: cover, streams: song.total_streams || song.streams || 0, artist: artistName });
+                    const songStreams = (song.total_streams || 0) + (song.streams || 0);
+                    posterReleasesData.push({ type: 'Música', title: song.title, cover: cover, streams: songStreams, artist: artistName });
                 });
 
                 if(posterReleasesData.length === 0) {
@@ -812,24 +840,35 @@
 
             try {
                 const [allSongsReq] = await Promise.all([ supabaseClient.from('songs').select('*') ]);
+                const allSongs = allSongsReq.data || [];
                 updateReleasesData = [];
 
                 if(adminCache.albums) {
                     const albums = adminCache.albums.filter(a => a.artist_id === artistId);
-                    albums.forEach(a => updateReleasesData.push({ 
-                        id: a.id, table: 'albums', type: 'Álbum', title: a.title, 
-                        streams: a.weekly_streams || 0, total_streams: a.total_streams || 0 
-                    }));
+                    albums.forEach(a => {
+                        const albumSongs = allSongs.filter(song => parsePgArray(song.album_ids).includes(a.id));
+                        const sumTotalStreams = albumSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
+                        
+                        updateReleasesData.push({ 
+                            id: a.id, table: 'albums', type: 'Álbum', title: a.title, 
+                            streams: a.weekly_streams || 0, total_streams: sumTotalStreams 
+                        });
+                    });
                 }
                 if(adminCache.singles) {
                     const singles = adminCache.singles.filter(s => s.artist_id === artistId);
-                    singles.forEach(s => updateReleasesData.push({ 
-                        id: s.id, table: 'singles', type: 'Single', title: s.title, 
-                        streams: s.weekly_streams || 0, total_streams: s.total_streams || 0 
-                    }));
+                    singles.forEach(s => {
+                        const singleSongs = allSongs.filter(song => parsePgArray(song.single_ids).includes(s.id));
+                        const sumTotalStreams = singleSongs.reduce((acc, song) => acc + (song.total_streams || 0) + (song.streams || 0), 0);
+                        
+                        updateReleasesData.push({ 
+                            id: s.id, table: 'singles', type: 'Single', title: s.title, 
+                            streams: s.weekly_streams || 0, total_streams: sumTotalStreams 
+                        });
+                    });
                 }
                 
-                const artistSongs = (allSongsReq.data || []).filter(song => parsePgArray(song.artist_ids).includes(artistId));
+                const artistSongs = allSongs.filter(song => parsePgArray(song.artist_ids).includes(artistId));
                 artistSongs.forEach(song => {
                     updateReleasesData.push({ 
                         id: song.id, table: 'songs', type: 'Música', title: song.title, 
@@ -887,7 +926,7 @@
             const { error } = await supabaseClient.from(item.table).update(updatePayload).eq('id', item.id);
 
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Salvar na Base de Dados';
+            btn.innerHTML = '<i class="fas fa-save"></i> Substituir Valores Atuais';
 
             if (error) { 
                 alert('Erro ao salvar: ' + error.message); 
@@ -895,6 +934,40 @@
                 showToast(`Streams de "${item.title}" atualizados com sucesso no Chart!`);
                 item.streams = streams;
                 item.total_streams = totalStreams;
+            }
+        });
+
+        // ------------------------------------------------------------------
+        // NOVO: ADICIONAR STREAMS APENAS NO TOTAL GLOBAL (CATÁLOGO ANTIGO)
+        // ------------------------------------------------------------------
+        document.getElementById('btnAddTotalDb').addEventListener('click', async () => {
+            const selectRel = document.getElementById('updateReleaseSelect');
+            if (!selectRel.value) { alert('Selecione uma música ou álbum primeiro!'); return; }
+
+            const item = updateReleasesData[selectRel.value];
+            const addAmount = parseInt(document.getElementById('dbAddTotalInput').value);
+            const btn = document.getElementById('btnAddTotalDb');
+
+            if (isNaN(addAmount) || addAmount <= 0) { alert('Insira um número válido maior que zero!'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Somando...';
+
+            const newTotal = (item.total_streams || 0) + addAmount;
+
+            // Atualiza APENAS o total_streams, mantendo o streams diário intacto
+            const { error } = await supabaseClient.from(item.table).update({ total_streams: newTotal }).eq('id', item.id);
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar ao Total';
+
+            if (error) { 
+                alert('Erro ao somar: ' + error.message); 
+            } else { 
+                showToast(`+${addAmount.toLocaleString('pt-BR')} adicionados ao histórico de "${item.title}"!`);
+                item.total_streams = newTotal;
+                document.getElementById('dbTotalStreamsInput').value = newTotal; // Atualiza o visual
+                document.getElementById('dbAddTotalInput').value = ''; // Limpa o campo
             }
         });
 
