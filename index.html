@@ -175,7 +175,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* POSTER ENGINE LAYOUT (MANTIDO) */
+        /* POSTER ENGINE LAYOUT */
         .poster-creator-layout { display: grid; grid-template-columns: 350px 1fr; gap: 40px; align-items: start; }
         .poster-preview-container { display: flex; justify-content: center; align-items: flex-start; background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px; overflow: hidden; min-height: 600px; }
         .poster-scale-wrapper { width: 1080px; height: 1350px; transform: scale(0.38); transform-origin: top center; margin-bottom: -837px; }
@@ -264,6 +264,7 @@
             </div>
             
             <div class="poster-creator-layout" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                
                 <div class="glass-panel" style="grid-column: 1 / -1;">
                     <h3 style="margin-bottom: 16px; color: var(--spotify-green);"><i class="fas fa-magic"></i> Atualização Manual / Sorteio do Dia</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
@@ -316,16 +317,27 @@
                         <i class="fas fa-external-link-alt"></i> Configurar Realismo
                     </button>
                 </div>
+
+                <div class="glass-panel" style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: rgba(226, 33, 52, 0.05); border-color: rgba(226, 33, 52, 0.3);">
+                    <div style="flex: 1; min-width: 250px;">
+                        <h3 style="margin-bottom: 8px; color: var(--trend-down-red);"><i class="fas fa-calendar-times"></i> Reset Semanal (Limpar RPG)</h3>
+                        <p style="font-size: 13px; color: var(--text-subdued);">Utilize este botão no início de uma nova semana para <strong>zerar os limites de ações de batalha (TV, Radio, MV)</strong> de absolutamente todos os artistas.</p>
+                    </div>
+                    <button class="btn-primary" id="btnResetWeek" style="width: auto; padding: 16px 40px; background-color: transparent; border: 2px solid var(--trend-down-red); color: var(--trend-down-red);">
+                        <i class="fas fa-power-off"></i> Fazer Reset da Semana
+                    </button>
+                </div>
                 
                 <div class="glass-panel" style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: rgba(29, 185, 84, 0.05); border-color: rgba(29, 185, 84, 0.3);">
                     <div style="flex: 1; min-width: 250px;">
                         <h3 style="margin-bottom: 8px; color: var(--spotify-green);"><i class="fas fa-globe"></i> Encerrar o Dia e Salvar Charts</h3>
-                        <p style="font-size: 13px; color: var(--text-subdued);">O sistema irá varrer toda a base de dados em bulk (super rápido), salvar os dados na planilha e zerar os streams diários para o próximo dia de RPG.</p>
+                        <p style="font-size: 13px; color: var(--text-subdued);">O sistema irá varrer toda a base de dados, salvar os dados na planilha e zerar os streams diários para o próximo dia de RPG.</p>
                     </div>
                     <button class="btn-primary" id="btnCloseDay" style="width: auto; padding: 16px 40px;">
                         <i class="fas fa-calendar-check"></i> Executar Encerramento
                     </button>
                 </div>
+
             </div>
         </section>
 
@@ -377,8 +389,8 @@
         </div>
         <div class="modal-body">
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('modalCatalog', 'catSpecific')">Lançamento Específico</button>
-                <button class="tab-btn" onclick="switchTab('modalCatalog', 'catGlobal')">Global (Todos < 2026)</button>
+                <button class="tab-btn active" onclick="switchTab('modalCatalog', 'catSpecific', this)">Lançamento Específico</button>
+                <button class="tab-btn" onclick="switchTab('modalCatalog', 'catGlobal', this)">Global (Todos < 2026)</button>
             </div>
 
             <div id="catSpecific" class="tab-content active">
@@ -424,8 +436,8 @@
         </div>
         <div class="modal-body">
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('modalRealism', 'realSpecific')">Lançamento Específico</button>
-                <button class="tab-btn" onclick="switchTab('modalRealism', 'realGlobal')">Global (Banco Todo)</button>
+                <button class="tab-btn active" onclick="switchTab('modalRealism', 'realSpecific', this)">Lançamento Específico</button>
+                <button class="tab-btn" onclick="switchTab('modalRealism', 'realGlobal', this)">Global (Banco Todo)</button>
             </div>
 
             <div id="realSpecific" class="tab-content active">
@@ -457,7 +469,7 @@
     <div id="toastContainer"></div>
 
     <script>
-      // CONFIGURAÇÕES SUPABASE
+        // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://avlgxwymwotffookkimg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_9uhuy6fpFduf-qsEXYf5wA_BDBB1OIZ'; 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -466,7 +478,7 @@
         // CACHE CENTRALIZADO
         let adminCache = { artists: [], albums: [], singles: [], songs: [] };
         let isCacheLoaded = false;
-        let selectedItemForModal = null; // Guarda o item selecionado visualmente nas modais
+        let selectedItemForModal = null; 
 
         // FUNÇÕES AUXILIARES
         function showToast(message) {
@@ -503,7 +515,7 @@
             } catch (err) { console.error("Erro ao guardar no Sheets:", err); }
         }
 
-        // CARREGAMENTO DE DADOS DO DASHBOARD E JOGADORES (As funções que faltavam!)
+        // CARREGAMENTO DE DADOS DO DASHBOARD E JOGADORES
         async function loadDashboardData() {
             try {
                 const [playersReq, artistsReq, albumsReq, singlesReq, songsReq] = await Promise.all([
@@ -596,7 +608,7 @@
         document.getElementById('updateArtistSelect').addEventListener('change', async (e) => {
             const artistId = e.target.value;
             const selectRel = document.getElementById('updateReleaseSelect');
-            const { data: songs } = await supabaseClient.from('songs').select('*'); // Pega atualizado do BD
+            const { data: songs } = await supabaseClient.from('songs').select('*');
             updateReleasesData = [];
 
             adminCache.albums.filter(a => a.artist_id === artistId).forEach(a => {
@@ -666,29 +678,28 @@
             }
         });
 
-
         // -------------------------------------------------------------------------
-        // SISTEMA DE MODAIS (Glassmorphism UI)
+        // SISTEMA DE MODAIS E CLIQUES CORRIGIDOS
         // -------------------------------------------------------------------------
         function openModal(modalId) {
             document.getElementById('mainOverlay').classList.add('active');
             document.getElementById(modalId).classList.add('active');
-            selectedItemForModal = null; // reseta seleção
+            selectedItemForModal = null; 
         }
         function closeModal(modalId) {
             document.getElementById('mainOverlay').classList.remove('active');
             document.getElementById(modalId).classList.remove('active');
         }
-        function switchTab(modalId, tabId) {
+        // Correção do click bugado: agora recebe o elemento do botão diretamente (btnElement)
+        function switchTab(modalId, tabId, btnElement) {
             const modal = document.getElementById(modalId);
             modal.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             modal.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            event.target.classList.add('active');
+            btnElement.classList.add('active'); // Aplicado diretamente no elemento do botão
             document.getElementById(tabId).classList.add('active');
         }
 
-        // RENDERIZAÇÃO DA LISTA VISUAL (Modais)
         function loadVisualItemsForModal(selectId, containerId) {
             const artistId = document.getElementById(selectId).value;
             const container = document.getElementById(containerId);
@@ -848,8 +859,31 @@
         });
 
         // -------------------------------------------------------------------------
-        // AÇÃO GLOBAL: ENCERRAR DIA BATCH (Super Rápido)
+        // AÇÕES GLOBAIS: RESET SEMANAL E ENCERRAR DIA BATCH
         // -------------------------------------------------------------------------
+        
+        // NOVO (Recolocado): Reset Semanal
+        document.getElementById('btnResetWeek').addEventListener('click', async () => {
+            if(!confirm("Tem certeza que deseja resetar os limites de ações (TV, Radio, MV) de todos os artistas para iniciar a nova semana?")) return;
+            
+            const btn = document.getElementById('btnResetWeek');
+            const originalText = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetando...';
+
+            try {
+                // Atualiza todos os artistas de uma vez. O not('id', 'is', null) é obrigatório no Supabase v2 para bulk updates.
+                const { error } = await supabaseClient
+                    .from('artists')
+                    .update({ promo_tv_count: 0, promo_radio_count: 0, mv_count: 0 })
+                    .not('id', 'is', null);
+
+                if (error) throw error;
+                showToast("Semana resetada com sucesso! Limites de ações zerados.");
+            } catch (err) { alert("Erro ao resetar a semana: " + err.message); } 
+            finally { btn.disabled = false; btn.innerHTML = originalText; }
+        });
+
+        // Encerrar Dia
         document.getElementById('btnCloseDay').addEventListener('click', async () => {
             const btn = document.getElementById('btnCloseDay');
             const originalText = btn.innerHTML;
@@ -857,7 +891,6 @@
 
             try {
                 await salvarChartNoSheets();
-                // O .gt garante que só vai perder tempo com as músicas que tiveram algum stream
                 const { error } = await supabaseClient.from('songs').update({ streams: 0 }).gt('streams', 0);
                 if (error) throw error;
                 showToast("Dia encerrado e diários limpos com sucesso!");
@@ -866,7 +899,7 @@
         });
 
         // -------------------------------------------------------------------------
-        // POSTER ENGINE (A outra função que tinha ficado esquecida)
+        // POSTER ENGINE
         // -------------------------------------------------------------------------
         const inputs = { cover: document.getElementById('inputCover'), title: document.getElementById('inputTitle'), artist: document.getElementById('inputArtist'), number: document.getElementById('inputNumber'), text: document.getElementById('inputText'), timeframe: document.getElementById('inputTimeframe'), color: document.getElementById('inputColor') };
         const poster = { container: document.getElementById('captureArea'), cover: document.getElementById('posterCover'), title: document.getElementById('posterTitle'), artist: document.getElementById('posterArtist'), number: document.getElementById('posterNumber'), text: document.getElementById('posterText'), timeframe: document.getElementById('posterTimeframe') };
@@ -887,7 +920,7 @@
         document.getElementById('posterArtistSelect').addEventListener('change', async (e) => {
             const artistId = e.target.value;
             const selectRel = document.getElementById('posterReleaseSelect');
-            const { data: songs } = await supabaseClient.from('songs').select('*'); // Força a buscar real
+            const { data: songs } = await supabaseClient.from('songs').select('*');
             posterReleasesData = [];
 
             adminCache.albums.filter(a => a.artist_id === artistId).forEach(a => {
@@ -906,8 +939,6 @@
                 document.getElementById('inputArtist').value = item.artist; 
                 document.getElementById('inputCover').value = item.cover || 'https://i.imgur.com/AD3MbBi.png'; 
                 document.getElementById('inputNumber').value = item.streams.toLocaleString('pt-BR').replace(/,/g, '.'); 
-                
-                // Força o Poster Engine a redesenhar a tela
                 Object.values(inputs).forEach(i => i.dispatchEvent(new Event('input')));
             }
         });
@@ -919,7 +950,7 @@
         });
 
         // -------------------------------------------------------------------------
-        // EVENTOS GLOBAIS DE INTERFACE (MOBILE & OVERLAY)
+        // EVENTOS GLOBAIS DE INTERFACE
         // -------------------------------------------------------------------------
         document.getElementById('menuToggleBtn').addEventListener('click', () => {
             document.getElementById('adminSidebar').classList.toggle('open');
@@ -929,11 +960,10 @@
         document.getElementById('mainOverlay').addEventListener('click', () => {
             document.getElementById('adminSidebar').classList.remove('open');
             document.getElementById('mainOverlay').classList.remove('active');
-            // Também fecha modais se clicar fora
             document.querySelectorAll('.modal-container').forEach(m => m.classList.remove('active'));
         });
 
-        // INICIA CARREGANDO O DASHBOARD
+        // INICIA
         window.onload = () => loadDashboardData();
     </script>
 </body>
